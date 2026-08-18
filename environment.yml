@@ -1,0 +1,24 @@
+name: mf6models
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - geopandas
+  - rasterio
+  - shapely
+  - fiona
+  - pyproj
+  - flopy>=3.10
+  - pyemu>=1.3
+  - pyflwdir
+  - netcdf4
+  - xarray
+  - openpyxl
+  - requests
+  - pip
+# External executables (install separately, not via conda):
+#   MODFLOW 6 (>=6.7.0), Triangle, PEST++ (pestpp-ies)  — see CdL/instructions/01_SETUP.md
