@@ -11,17 +11,19 @@ workflows, by Alain Pascal Frances (LNEG, Portugal).
 
 ## Start here
 
-Open **[`CdL/instructions/01_SETUP.md`](CdL/instructions/01_SETUP.md)** — it walks through the
-conda environment, the external executables (MODFLOW 6, Triangle, pestpp-ies), where to put
-the input data, and the **six path prefixes** you must change to run on a new machine
-(see [`02_PATHS_TO_CHANGE.md`](CdL/instructions/02_PATHS_TO_CHANGE.md)).
+- **New machine, from scratch?** → **[`INSTALL.md`](INSTALL.md)** — a full cook-book (Miniconda,
+  the conda env with pinned versions, MODFLOW 6, Triangle, PEST++), with a proposed disk layout.
+- **What is this model?** → [`CdL/instructions/00_OVERVIEW.md`](CdL/instructions/00_OVERVIEW.md).
+- **Already have the tools?** → [`CdL/instructions/01_SETUP.md`](CdL/instructions/01_SETUP.md) and the
+  **six path prefixes** to change in [`02_PATHS_TO_CHANGE.md`](CdL/instructions/02_PATHS_TO_CHANGE.md).
 
 ## Layout
 
 ```
 MF6models/
 ├── README.md                  (this file)
-├── environment.yml            (conda environment spec)
+├── INSTALL.md                 (from-scratch install cook-book + disk layout)
+├── environment.yml            (conda environment spec, versions pinned)
 ├── .gitignore
 └── CdL/
     ├── code/                  (all Python scripts — the canonical model is cdl_gwf_model_fable_v2.py)
@@ -33,6 +35,7 @@ MF6models/
     │   ├── pest/              (COS zone map + last calibrated parameter set)
     │   └── LARGE_DATA_MANIFEST.md   (the DEM + COS rasters: where to get, where to place)
     └── instructions/
+        ├── 00_OVERVIEW.md
         ├── 01_SETUP.md
         ├── 02_PATHS_TO_CHANGE.md
         ├── 03_RUN_ORDER.md

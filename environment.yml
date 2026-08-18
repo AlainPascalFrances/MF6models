@@ -1,24 +1,29 @@
+# Conda environment for the MF6models workflow — PINNED to the versions actually used
+# (captured 2026-08-17). To relax if the solver struggles on another OS, change `=x.y.z`
+# to `>=x.y`. Create with:  conda env create -f environment.yml
 name: mf6models
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
-  - numpy
-  - pandas
-  - scipy
-  - matplotlib
-  - geopandas
-  - rasterio
-  - shapely
-  - fiona
-  - pyproj
-  - flopy>=3.10
-  - pyemu>=1.3
-  - pyflwdir
-  - netcdf4
-  - xarray
-  - openpyxl
-  - requests
+  - python=3.12.13
+  - numpy=2.4.6
+  - pandas=2.3.3
+  - scipy=1.17.1
+  - matplotlib=3.10.9
+  - geopandas=1.1.3
+  - rasterio=1.5.0
+  - shapely=2.1.2
+  - fiona=1.10.1
+  - pyproj=3.7.2
+  - flopy=3.10.0
+  - pyemu=1.4.0
+  - pyflwdir=0.5.12
+  - netcdf4=1.7.4
+  - xarray=2026.4.0
+  - openpyxl=3.1.5
+  - requests=2.34.2
+  - spyder            # the author's IDE (optional; omit if you use another editor)
   - pip
-# External executables (install separately, not via conda):
-#   MODFLOW 6 (>=6.7.0), Triangle, PEST++ (pestpp-ies)  — see CdL/instructions/01_SETUP.md
+# External executables (install separately — NOT conda packages):
+#   MODFLOW 6  6.7.0   |  Triangle (any)  |  PEST++ (pestpp-ies) 5.2.16
+#   See INSTALL.md.
