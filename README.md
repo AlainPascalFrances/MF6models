@@ -11,18 +11,17 @@ workflows, by Alain Pascal Frances (LNEG, Portugal).
 
 ## Start here
 
-- **New machine, from scratch?** → **[`INSTALL.md`](INSTALL.md)** — a full cook-book (Miniconda,
-  the conda env with pinned versions, MODFLOW 6, Triangle, PEST++), with a proposed disk layout.
 - **What is this model?** → [`CdL/instructions/00_OVERVIEW.md`](CdL/instructions/00_OVERVIEW.md).
-- **Already have the tools?** → [`CdL/instructions/01_SETUP.md`](CdL/instructions/01_SETUP.md) and the
-  **six path prefixes** to change in [`02_PATHS_TO_CHANGE.md`](CdL/instructions/02_PATHS_TO_CHANGE.md).
+- **Set up a new machine (install cook-book)** → **[`CdL/instructions/01_SETUP.md`](CdL/instructions/01_SETUP.md)** —
+  Miniconda, the pinned conda env, MODFLOW 6, Triangle, PEST++, a proposed disk layout, and the
+  **six path prefixes** to change (detailed in [`02_PATHS_TO_CHANGE.md`](CdL/instructions/02_PATHS_TO_CHANGE.md)).
+- **Run it** → [`CdL/instructions/03_RUN_ORDER.md`](CdL/instructions/03_RUN_ORDER.md).
 
 ## Layout
 
 ```
 MF6models/
 ├── README.md                  (this file)
-├── INSTALL.md                 (from-scratch install cook-book + disk layout)
 ├── environment.yml            (conda environment spec, versions pinned)
 ├── .gitignore
 └── CdL/
