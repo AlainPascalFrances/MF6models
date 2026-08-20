@@ -6,6 +6,20 @@ find-and-replace for each across `CdL/code/*.py`. Nothing else needs editing.
 > Tip: most editors do folder-wide replace (VS Code: Ctrl+Shift+H). Replace the **prefix**
 > only, leaving the rest of each path intact.
 
+### Automated alternative — `CdL/port_paths.py`
+
+Instead of editing by hand, run the helper script [`../port_paths.py`](../port_paths.py). It has the
+six prefixes below pre-loaded as its search strings. Workflow:
+
+1. Run it as-is (`DRY_RUN = True`, all NEW values empty) — it **scans** and reports where each old
+   prefix appears across `CdL/code`, so you can see exactly what will change.
+2. Fill in the `NEW` value for each prefix in the `REPLACEMENTS` list.
+3. Run again to **preview** the edits, then set `DRY_RUN = False` to **apply** them.
+
+It replaces both the backslash and forward-slash forms of each Windows path, only touches text files
+(skips binaries and `.git`), applies the most specific prefix first, and keeps a `.bak` of every
+modified file. Point `TARGET_DIR` at whichever folder you unpacked the code into.
+
 | # | Find (current prefix) | Replace with | What it is |
 |---|---|---|---|
 | 1 | `E:\00code_ws\DRYAD` | your `<DATA_ROOT>` (e.g. `D:\DRYAD`) | The two working dirs `CdL_model` (model workspace/outputs) and `CdL_pest` (PEST dirs) live under here. **Also written as forward slashes** in a few spots — check both `E:\00code_ws\DRYAD` and `E:/00code_ws/DRYAD`. |
