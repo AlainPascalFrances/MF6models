@@ -7,6 +7,7 @@ Run in Spyder / a terminal (multi-hour): 8 workers x ~6-min MF6 run each.
   NOPTMAX =  0  -> single base run (initial parameters) -> base phi report (quick).
   NOPTMAX >  0  -> that many IES iterations (the actual calibration).
 """
+import os
 import shutil
 from pathlib import Path
 import pyemu
@@ -33,6 +34,21 @@ NUM_WORKERS = 12       # raise on the server (one worker per physical core)
 NOPTMAX     = 3        # <-- set to 0 (base run), -1 (prior MC), or 3 (IES calibration)
 NUM_REALS   = 150      # geostatistical prior ensemble (prior_pe.jcb holds 200; pestpp uses the first 150)
 PORT        = 4269
+# TIKHONOV smoothness strength for the IES update: composite phi = measurement_phi +
+# REG_FACTOR * regularization_phi (the first-order preferred-difference PI equations build_pst.py
+# adds on the Kh pilot points). 0.0 = OFF (an un-regularised run drove ~59% of pilot points to
+# their bounds); 0.5 gave a smooth field (~25% at bounds) at no cost to the data fit.
+REG_FACTOR  = 0.5
+# Adaptive localization: OFF by default when regularising. pestpp-ies 5.2.27 heap-crashes in the
+# regularised upgrade solve when localization is combined with reg at a large ensemble x many PI
+# equations; Tikhonov (above) serves as the anti-checkerboard mechanism instead. CDL_AUTOADALOC=1 re-enables.
+USE_AUTOADALOC = os.environ.get("CDL_AUTOADALOC", "0") != "0"
+# Non-interactive overrides for orchestrated runs (drive from the environment without editing above):
+#   CDL_NOPTMAX (0/-1/3), CDL_PORT, CDL_REG_FACTOR, CDL_NUM_REALS, CDL_AUTOADALOC.
+NOPTMAX     = int(os.environ.get("CDL_NOPTMAX", NOPTMAX))
+PORT        = int(os.environ.get("CDL_PORT", PORT))
+REG_FACTOR  = float(os.environ.get("CDL_REG_FACTOR", REG_FACTOR))
+NUM_REALS   = int(os.environ.get("CDL_NUM_REALS", NUM_REALS))
 
 if __name__ == "__main__":
     pst = pyemu.Pst(str(TEMPLATE / "cdl.pst"))
@@ -46,7 +62,13 @@ if __name__ == "__main__":
     #     negative-Moran's-I result). Needs no localizer matrix.
     if NOPTMAX != 0:                                        # (base run ignores the ensemble)
         pst.pestpp_options["ies_parameter_ensemble"] = "prior_pe.jcb"
-        pst.pestpp_options["ies_autoadaloc"] = True        # automatic adaptive localization
+        if USE_AUTOADALOC:
+            pst.pestpp_options["ies_autoadaloc"] = True     # automatic adaptive localization
+        else:
+            pst.pestpp_options.pop("ies_autoadaloc", None)  # ensure it's OFF (remove any stale key)
+        # (c) TIKHONOV: fold the first-order (smoothness) PI equations into the composite phi so the
+        #     ensemble UPDATE keeps neighbouring pilot points close -> smooth K field, fewer at bounds.
+        pst.pestpp_options["ies_reg_factor"] = REG_FACTOR
     pst.pestpp_options["ies_bad_phi_sigma"] = 2.5          # reject runaway realizations
     pst.pestpp_options["overdue_giveup_fac"] = 2.0         # kill hung/grinding MF6 runs FAST (was 5.0 = 6.5 h)
     pst.pestpp_options["overdue_giveup_minutes"] = 120.0    # ABSOLUTE cap: kill any run >120 min. CRITICAL —
@@ -56,6 +78,10 @@ if __name__ == "__main__":
 
     if MASTER.exists():
         shutil.rmtree(MASTER)
+    # start_workers requires worker_root to already exist (it creates the per-worker
+    # subdirs inside it, but not the root itself) — make it here or the run aborts
+    # with "worker root dir not found".
+    WORKERROOT.mkdir(parents=True, exist_ok=True)
     pyemu.os_utils.start_workers(
         str(TEMPLATE), PESTPP_IES, "cdl.pst",
         num_workers=NUM_WORKERS, worker_root=str(WORKERROOT),

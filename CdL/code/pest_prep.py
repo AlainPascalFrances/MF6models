@@ -32,6 +32,19 @@ if (WS / "cdl_gwf.obs.head.csv").exists():
     shutil.copy2(WS / "cdl_gwf.obs.head.csv", ORG / "cdl_gwf.obs.head.csv")
 if (WS / "cdl_gwf.obs.sfr.csv").exists():                # SFR inlet/outlet streamflow obs (build_pst reads its cols)
     shutil.copy2(WS / "cdl_gwf.obs.sfr.csv", ORG / "cdl_gwf.obs.sfr.csv")
+
+# Collapse the reference head/sfr obs to STRESS-PERIOD-END rows (drop ATS sub-steps),
+# so the positional .ins that build_pst generates expects a DETERMINISTIC NPER rows —
+# exactly what forward_run.py collapses every run to.  Without this, realisations whose
+# ATS sub-stepping differs from the reference misalign the .ins and fail. (obs_collapse.py)
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).parent))
+from obs_collapse import period_end_times, collapse_obs_csv
+_ends = period_end_times(str(WS / "cdl_gwf.tdis"))
+for _o in ("cdl_gwf.obs.head.csv", "cdl_gwf.obs.sfr.csv"):
+    if (ORG / _o).exists():
+        _nb, _na = collapse_obs_csv(str(ORG / _o), _ends)
+        print(f">> collapsed reference {_o}: {_nb} -> {_na} rows (period ends; {_nb - _na} ATS sub-steps dropped)")
 # GHB/DRN-west total-flow obs (for the BC inequality) + an example bc_constraint.csv (the derived
 # value forward_run.py writes; build_pst reads its format to register the 'less_than' constraint obs)
 import pandas as _pd

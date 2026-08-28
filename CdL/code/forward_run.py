@@ -30,6 +30,14 @@ def main():
     # (The path has no spaces, so quotes aren't needed.)
     pyemu.os_utils.run(MF6)
 
+    # 3b. ATS makes the SFR/HEAD obs csvs have a parameter-dependent number of rows
+    # (extra sub-steps on periods that fail to converge), which breaks the POSITIONAL
+    # .ins files ("EOF ... line advance") for any realization that sub-steps unlike the
+    # reference run. Collapse both csvs to the deterministic period-end rows so the .ins
+    # always aligns.  Must match the reference collapse done in pest_prep.py.
+    from obs_collapse import collapse_run_obs
+    collapse_run_obs(".")
+
     # 4. zonal AET (cos_zones.npz + voronoi_grid.pkl are copied into each worker)
     from model_aet_zonal import compute_zonal_aet
     compute_zonal_aet(".", ".").to_csv("model_aet_zonal.csv")

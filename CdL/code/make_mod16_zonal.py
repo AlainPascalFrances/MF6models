@@ -8,7 +8,7 @@ geolocation, so we transform the Voronoi-cell centroids into that CRS, sample th
 grid at each cell, area-weight per zone, and convert 8-day composites to monthly totals.
 Output: CdL_pest\mod16_aet_zonal.csv
 """
-import glob, re, pickle
+import glob, re, pickle, time
 from pathlib import Path
 from datetime import datetime, timedelta
 import numpy as np, pandas as pd, rasterio
@@ -53,8 +53,19 @@ for f in granules:
     mm = re.search(r"\.A(\d{4})(\d{3})\.", f); yr, doy = int(mm.group(1)), int(mm.group(2))
     start = datetime(yr, 1, 1) + timedelta(days=doy - 1)
     ndays = min(8, (datetime(yr, 12, 31) - start).days + 1)      # last composite of year is short
-    with rasterio.open(sub(f)) as r:
-        a = r.read(1, window=Window(c0, r0, nc, nr)).astype(float)
+    a = None
+    for _try in range(5):                                        # reads over the SMB share hiccup; retry before giving up
+        try:
+            with rasterio.open(sub(f)) as r:
+                a = r.read(1, window=Window(c0, r0, nc, nr)).astype(float)
+            break
+        except Exception as _e:
+            if _try < 4:
+                time.sleep(0.5)
+            else:
+                print(f"   !! skipping unreadable granule after 5 tries: {Path(f).name} ({_e})")
+    if a is None:                                                # drop this 8-day composite (partial months -> NaN)
+        continue
     a[(a < -32767) | (a > 32700)] = np.nan                       # mask fill/QC codes
     a *= 0.1                                                      # -> mm/8day
     etc = np.full(ncpl, np.nan)

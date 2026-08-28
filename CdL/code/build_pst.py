@@ -197,12 +197,29 @@ def main():
     print(f"   geostatistical prior drawn: {N_PRIOR_REALS}-real prior_pe.jcb "
           f"(supply via ies_parameter_ensemble)")
 
+    # ---- FIRST-ORDER TIKHONOV (preferred-difference / smoothness) on the Kh pilot points ----
+    # The geostatistical PRIOR (prior_pe.jcb) makes neighbouring pilot points co-vary, but the IES
+    # UPDATE still roughens the field (an un-regularised 3-iteration run drove ~59% of pilot points
+    # to their bounds -> posterior negative Moran's I / checkerboard). Add explicit Tikhonov
+    # regularisation - prior-information equations penalising the LOG-K DIFFERENCE between spatially-
+    # correlated pilot points (preferred difference = 0 -> smooth field), built from the geostruct
+    # prior COVARIANCE (also saved as prior_cov.jcb). These enter the IES COMPOSITE phi only when
+    # ies_reg_factor>0 (set in run_ies.py) - that factor is the smoothness STRENGTH knob. abs_drop_tol
+    # keeps only pilot-point pairs whose prior correlation exceeds it (true neighbours), so the
+    # equation count stays modest - important: pestpp-ies 5.2.27 heap-crashes when reg is active with
+    # a large ensemble x many PI eqs, so ~1-1.5k equations (tol 0.60) keeps the 150-real load safe.
+    TIK_DROP_TOL = 0.60
+    cov = pf.build_prior(fmt="binary", filename=str(TEMPLATE / "prior_cov.jcb"))
+    pyemu.helpers.first_order_pearson_tikhonov(pst, cov, reset=True, abs_drop_tol=TIK_DROP_TOL)
+    print(f"   Tikhonov: {pst.prior_information.shape[0]} first-order (smoothness) PI equations "
+          f"added; prior_cov.jcb saved. Activate with ies_reg_factor>0 in run_ies.py.")
+
     # ---- forward run: our forward_run.py (applies mults -> Kv -> mf6 -> AET) ----
     # ⚠ MUST copy AFTER pf.build_pst(): build_pst() writes its OWN apply-ONLY
     # forward_run.py stub (no mf6, no AET). Copying ours afterward overwrites that
     # stub. (Copying before -> build_pst clobbers ours -> the base run does apply
     # only, mf6 never runs, obs files missing -> "model_aet_zonal.csv not found".)
-    for f in ("forward_run.py", "model_aet_zonal.py"):
+    for f in ("forward_run.py", "model_aet_zonal.py", "obs_collapse.py"):
         shutil.copy2(CODE / f, TEMPLATE / f)
     shutil.copy2(PEST / "cos_zones.npz", TEMPLATE / "cos_zones.npz")
 
