@@ -1,8 +1,9 @@
 """Export a QGIS categorized .qml style for layer gc_35a_cdl, keyed on field 'Codigo',
 using the official AML 100k geological-map symbology (user-provided RGB)."""
+import config
 import os, geopandas as gpd
 
-GIS  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS"
+GIS  = (str(config.MODEL) + r"\gis\GIS")
 GPKG = os.path.join(GIS, "dryad_modelo_NbS.gpkg")
 QML  = os.path.join(GIS, "geology_aml100k_symbology.qml")
 

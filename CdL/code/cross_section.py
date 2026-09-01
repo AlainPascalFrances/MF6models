@@ -1,5 +1,6 @@
 """Final CdL/DRYAD topographic cross-section with ERT P1-P4 and geological unit boundaries (Codigo).
 v2: map shows all ERT P1-P6 + one label per geological unit; profile labels de-overlapped."""
+import config
 import os, copy, numpy as np, geopandas as gpd, pandas as pd, rasterio
 from rasterio import Affine
 from rasterio.enums import Resampling
@@ -11,9 +12,9 @@ from matplotlib.lines import Line2D
 from matplotlib.colors import LightSource
 import matplotlib.patheffects as pe
 
-OUT = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-DEM  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+OUT = (str(config.MODEL) + r"\conceptual")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+DEM  = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
 
 # ---- transect + topography ----
 d = np.load(os.path.join(OUT, "profile_data.npz"), allow_pickle=True)

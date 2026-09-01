@@ -58,6 +58,7 @@ Written by Claude Fable 5
 ================================================================================
 """
 
+import config
 import os
 import pickle
 from pathlib import Path
@@ -83,10 +84,13 @@ from flopy.utils.gridintersect import GridIntersect
 # -----------------------------------------------------------------------------
 # 0. PATHS & GLOBAL SETTINGS
 # -----------------------------------------------------------------------------
-MF6_EXE = r"C:\00MODFLOW\mf6.7.0_win64\bin\mf6.exe"
-TRIANGLE_EXE = r"C:\00MODFLOW\win64\triangle.exe"
+WORKSPACE = Path(str(config.MODEL))
+WORKSPACE.mkdir(exist_ok=True, parents=True)
 
-WATERSHED_GPKG = r"E:/zzCloud/OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia/DRYAD/GIS/dryad_modelo_NbS.gpkg"
+MF6_EXE = config.MF6_EXE
+TRIANGLE_EXE = config.TRIANGLE_EXE
+
+WATERSHED_GPKG = WORKSPACE / "gis" / "dryad_modelo_NbS.gpkg"
 WATERSHED_LAYER = "watershed_cdl_fixed"
 # Streams now live in the GeoPackage (user-fixed layer); routing is derived in section 8b.
 STREAMS_LAYER = "streams_cdl"
@@ -96,17 +100,17 @@ OBS_PTS_LAYER = "obs_points_cdl"
 BRIDGE_TOL = 20.0   # m: snap dangling endpoints onto nearest line within this gap (T-junctions)
 SNAP_TOL   = 1.0    # m: endpoints closer than this collapse to a single node
 
-DEM_TIF = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+DEM_TIF = WORKSPACE / "gis" / "dem_cdl.tif"
 
-P_CSV  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\p_month_198101_202605.csv"
-ET0_CSV = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\et0_month_198101_202605.csv"
+P_CSV  = WORKSPACE / "forcing" / "p_month_198101_202605.csv"
+ET0_CSV = WORKSPACE / "forcing" / "et0_month_198101_202605.csv"
 
 # Soil-hydraulic rasters (DRYAD\dados\solos) -> per-cell UZF parameters (section 4b).
-SOLOS_DIR     = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\dados\solos"
-SOIL_VKS_TIF  = SOLOS_DIR + r"\ks_cdl.tif"     # saturated K           -> UZF vks
-SOIL_THTS_TIF = SOLOS_DIR + r"\ths_cdl.tif"    # saturated water cont. -> thts
-SOIL_THTR_TIF = SOLOS_DIR + r"\wp_cdl.tif"     # wilting point         -> thtr (residual)
-SOIL_THTI_TIF = SOLOS_DIR + r"\fc_cdl.tif"     # field capacity        -> thti (initial)
+#SOLOS_DIR     = WORKSPACE + r"\gis"
+SOIL_VKS_TIF  = WORKSPACE / "gis" / "ks_cdl.tif"     # saturated K           -> UZF vks
+SOIL_THTS_TIF = WORKSPACE / "gis" / "ths_cdl.tif"    # saturated water cont. -> thts
+SOIL_THTR_TIF = WORKSPACE / "gis" / "wp_cdl.tif"     # wilting point         -> thtr (residual)
+SOIL_THTI_TIF = WORKSPACE / "gis" / "fc_cdl.tif"     # field capacity        -> thti (initial)
 # Unit conversions: ths/wp/fc rasters are in PERCENT (-> *0.01); ks is in cm/d
 # (-> *0.01 = m/d), per the data provider.
 SOIL_WC_TO_FRAC = 0.01
@@ -116,7 +120,7 @@ SOIL_VKS_TO_MD  = 0.01     # ks_cdl.tif is cm/d
 # (§11 UZF).  Rooting/extinction depths per COS class, user-confirmed 2026-07-20 (Daoud 2022:
 # Quercus 3.7 m / grass 1 m; Canadell 1996 for the others).  The catchment is 68% cork/holm-oak
 # montado, so phreatic ET by the deep-rooted oaks dominates — see the UZF ET note in §11.
-COS_TIF = r"E:\ArcGis_Data\WorkSpace\COS\COSc2025\COSc_2025_N3_v0_TM06.tif"
+COS_TIF = WORKSPACE / "gis" / "COSc2025" / "COSc_2025_N3_v0_TM06.tif"
 COS_EXTDP = {                       # COS class -> extinction (rooting) depth [m], from land surface
     311: 3.7, 313: 3.7, 312: 3.7,   # cork/holm oak, other broadleaf, eucalyptus (deep phreatophytes)
     321: 2.5, 322: 2.5, 323: 2.5,   # maritime / stone / other pine
@@ -127,8 +131,6 @@ COS_EXTDP = {                       # COS class -> extinction (rooting) depth [m
 }
 COS_EXTDP_DEFAULT = 1.0    # fallback for any class not in the table (grass-like)
 
-WORKSPACE = Path(r"E:\00code_ws\DRYAD\CdL_model")
-WORKSPACE.mkdir(exist_ok=True, parents=True)
 # Pre-processing outputs (model map, parameter maps) -> timestamped subfolder
 # (time the script starts).  The stamp is written to disk so post-processing lands
 # in a matching _output\<stamp>\ folder for the same run.
@@ -238,7 +240,7 @@ CRR_ENABLE = True
 CRR_BETA   = 1.0                 # β flow-partitioning factor (Daoud calibrates 0.8–1; 1 = route everything downslope)
 POND_DEPTH  = 4.0     # m, pond depth below the local ground: lake bottom = mean(footprint DEM) − POND_DEPTH
                       #   (drives the stage/volume/area table + the equilibrium initial stage)
-VORONOI_LAYERS = r"E:\00code_ws\DRYAD\CdL_model\conceptual\layers\voronoi_layers.npz"  # build_layers.py
+VORONOI_LAYERS = WORKSPACE / "conceptual" / "layers" / "voronoi_layers.npz"  # build_layers.py
 LAK_BEDLEAK = 1e-3    # 1/d, lakebed leakance — the physical clay-lined-charca value (El-Zehairy 2018:
                       #   7e-4..1.5e-3/d; Turawa clay-lined 0.0007–0.0015/d). USER-CONFIRMED behaviour
                       #   2026-07-04: low seepage + never-dry ponds is the EXPECTED CdL physics.
@@ -300,7 +302,7 @@ SFR_INFLOW_M3D      = None    # OR a direct constant inflow (m3/d); overrides A_
 #     solve; set INLET_PEAK_CAP_M3D to bound it if it diverges. The SS spin-up period 0 is
 #     held at the long-term MEAN (a monthly flood is not a steady state).
 INLET_TIMESERIES     = True
-DONOR_STREAMFLOW_CSV = r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability\streamflow_21F_01H.csv"
+DONOR_STREAMFLOW_CSV = (str(config.PEST) + r"\snirh_data_availability\streamflow_21F_01H.csv")
 DONOR_AREA_KM2       = 493.8    # Ponte Canha (21F/01H) drainage area, km2
 INLET_PEAK_CAP_M3D   = None     # optional stability cap on the monthly inlet input (None = uncapped)
 # --- PEST-optimised parameters (see extract_pest_optimised.py + the §5 loader) ---
@@ -310,7 +312,7 @@ INLET_PEAK_CAP_M3D   = None     # optional stability cap on the monthly inlet in
 #   a data-fitting set, NOT physical estimates. Use for inspection; re-extract
 #   after the next (streamflow+piezo) calibration. Rebuild the npz if the grid changes.
 USE_PEST_PARAMS = True #False True   # 2026-08-14: back to BASE — the DRN-datum change invalidated the old calibration; run base+new-drain to test the alluvial-underflow exit, THEN re-calibrate
-PEST_PARAMS_NPZ = Path(r"E:\00code_ws\DRYAD\CdL_pest\pest_optimised.npz")
+PEST_PARAMS_NPZ = Path((str(config.PEST) + r"\pest_optimised.npz"))
 # Auto-refresh the npz from the CURRENT pestpp-ies master dir (runs extract_pest_optimised.py) before
 # loading, so USE_PEST_PARAMS always reflects the latest calibration (user 2026-08-17). Set False to
 # reuse the existing npz as-is (e.g. master was cleared, or to skip the ~minutes of pilot-point kriging).

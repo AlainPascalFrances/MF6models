@@ -20,6 +20,7 @@ Outputs (workspace):
     pond_recharge_analysis.png   bar chart (per pond) + seasonal climatology + totals
 ================================================================================
 """
+import config
 import csv
 from pathlib import Path
 import numpy as np
@@ -30,9 +31,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # ---- paths / parameters (mirror the main model) ----------------------------------
-WS    = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-P_CSV = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\p_month_198101_202605.csv"
+WS    = Path(str(config.MODEL))
+GPKG  = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+P_CSV = (str(config.MODEL) + r"\gis\WP3_modeling\3.1.1\modelo_numerico\p_month_198101_202605.csv")
 C_RUNOFF = 0.15        # runoff coefficient (fraction of catchment rainfall captured as runoff); calibratable starter value
 RECHARGE_FRAC = 0.20   # natural aquifer recharge as a fraction of P (model SS value; for context only)
 # Perched ponds (water table BELOW the pond bottom) — these convert captured runoff into NEW recharge.

@@ -17,6 +17,7 @@ Outputs (WORKSPACE/diag/):
 Load mvr_arrows.shp over the grid in QGIS: every CRR arrow should join two cells
 that share a face.  A red arrow (non-adjacent) would flag a real routing bug.
 """
+import config
 import pickle
 from pathlib import Path
 from collections import defaultdict
@@ -33,9 +34,9 @@ import flopy
 from flopy.discretization import VertexGrid
 from flopy.utils.gridintersect import GridIntersect
 
-WS   = Path(r"E:\00code_ws\DRYAD\CdL_model")
+WS   = Path(str(config.MODEL))
 MODEL = "cdl_gwf"
-GPKG = r"E:/zzCloud/OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia/DRYAD/GIS/dryad_modelo_NbS.gpkg"
+GPKG = r"X:/3p1p1/DR3PDA1/CdL_model/gis/GIS/dryad_modelo_NbS.gpkg"
 TARGET = CRS.from_epsg(3763)
 OUT  = WS / "diag"; OUT.mkdir(exist_ok=True)
 

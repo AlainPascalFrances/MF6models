@@ -10,6 +10,7 @@ mean depth = (Σ ET volume over the zone) / (Σ cell area) × 1000  [mm/period].
 Importable:  compute_zonal_aet(workspace, pest_dir, spinup_nper=12, sim_start=...)
 Standalone:  runs on the current WORKSPACE outputs, writes model_aet_zonal.csv + .png
 """
+import config
 import pickle
 from pathlib import Path
 import numpy as np
@@ -66,7 +67,7 @@ def compute_zonal_aet(workspace, pest_dir, spinup_nper=12,
                       sim_start=None, model_name="cdl_gwf"):
     workspace, pest_dir = Path(workspace), Path(pest_dir)
     if sim_start is None:            # single source of truth = the model's sidecar (fallback 1981)
-        _ssf = Path(r"E:\00code_ws\DRYAD\CdL_model\last_sim_start.txt")
+        _ssf = Path((str(config.MODEL) + r"\last_sim_start.txt"))
         sim_start = pd.Timestamp(_ssf.read_text().strip()) if _ssf.exists() else pd.Timestamp(1981, 1, 1)
     gp = pickle.load(open(workspace / "voronoi_grid.pkl", "rb"))[0]
     vgrid = VertexGrid(**gp, nlay=1); ncpl = vgrid.ncpl
@@ -109,7 +110,7 @@ def compute_zonal_aet(workspace, pest_dir, spinup_nper=12,
 
 if __name__ == "__main__":
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
-    WS = Path(r"E:\00code_ws\DRYAD\CdL_model"); PD = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+    WS = Path(str(config.MODEL)); PD = Path(str(config.PEST))
     df = compute_zonal_aet(WS, PD)
     df.to_csv(PD / "model_aet_zonal.csv")
     print("Zonal AET (mm/month) — long-term means:")

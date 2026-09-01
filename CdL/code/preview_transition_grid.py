@@ -4,6 +4,7 @@ the model workspace or its cached grid — builds Triangle+Voronoi to a scratch 
 plots cell size (sqrt area) zoomed on a pond and a stream reach, to verify the grading
 steps smoothly (2.5 -> 6 -> 12 -> 25 -> 60 -> stream/far) before adopting it in the model.
 """
+import config
 import numpy as np
 import geopandas as gpd
 from shapely.ops import unary_union, linemerge
@@ -19,10 +20,10 @@ from flopy.discretization import VertexGrid
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
 
-GPKG   = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-TRIEXE = r"C:\00MODFLOW\win64\triangle.exe"
+GPKG   = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+TRIEXE = r"C:\sw\MODFLOWandCo\mf6.7.0_win64\bin\win64\triangle.exe"
 SCRATCH = r"C:\Users\ALAIN~1.FRA\AppData\Local\Temp\claude\E--tmp-claude\e6df0a7e-94fe-4a92-af96-7d7d05484f82\scratchpad\tri_preview"
-OUT    = r"E:\00code_ws\DRYAD\CdL_model\diag\transition_grid_preview.png"
+OUT    = (str(config.MODEL) + r"\diag\transition_grid_preview.png")
 TARGET = CRS.from_epsg(3763)
 import os; os.makedirs(SCRATCH, exist_ok=True)
 

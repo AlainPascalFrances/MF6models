@@ -8,6 +8,7 @@ geolocation, so we transform the Voronoi-cell centroids into that CRS, sample th
 grid at each cell, area-weight per zone, and convert 8-day composites to monthly totals.
 Output: CdL_pest\mod16_aet_zonal.csv
 """
+import config
 import glob, re, pickle, time
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -18,9 +19,9 @@ from pyproj import Transformer
 from flopy.discretization import VertexGrid
 from shapely.geometry import Polygon
 
-WS   = Path(r"E:\00code_ws\DRYAD\CdL_model")
-PEST = Path(r"E:\00code_ws\DRYAD\CdL_pest")
-MODDIR = Path(r"Y:\RS\MODIS4CDL")
+WS   = Path(str(config.MODEL))
+PEST = Path(str(config.PEST))
+MODDIR = WS / "RS" / "MODIS4CDL"        # MODIS granules live under the model workspace on this server
 GRID = "MOD_Grid_MOD16A2"
 ZONE_NAMES = {1: "oak_broadleaf", 2: "pine", 3: "matos", 4: "grass_crops", 5: "bare_built_water"}
 def sub(f):                                   # ET_500m subdataset path for a granule

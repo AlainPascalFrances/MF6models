@@ -1,6 +1,7 @@
 """Plan-view map of the 3 hydrostratigraphic units (gpkg layer dryad_modelo_nbs__gc_35a_cdl_hydrostrat,
 Codigo 1/2/3) draped over the LiDAR-DTM hillshade — same style as geology_plan.png (ERT P1-P6, streams,
 watershed, transect).  -> <OUT>\\hydrostrat_plan.png"""
+import config
 import os, copy, numpy as np, geopandas as gpd, rasterio
 from rasterio import Affine
 from rasterio.enums import Resampling
@@ -11,9 +12,9 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import matplotlib.patheffects as pe
 
-OUT  = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-DEM  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+OUT  = (str(config.MODEL) + r"\conceptual")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+DEM  = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
 HYDRO = "dryad_modelo_nbs__gc_35a_cdl_hydrostrat"
 halo = [pe.withStroke(linewidth=2.2, foreground="white")]
 

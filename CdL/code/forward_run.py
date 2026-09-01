@@ -5,12 +5,13 @@ PEST++ forward run (executed in every worker dir).
   3. run MODFLOW 6
   4. post-process the zonal actual-ET (heads are written directly by the MF6 OBS pkg)
 """
+import config
 import os
 import glob
 import numpy as np
 import pyemu
 
-MF6 = r"C:\00MODFLOW\mf6.7.0_win64\bin\mf6.exe"
+MF6 = config.MF6_EXE
 KV_RATIO = 0.1                      # k33 = KV_RATIO * k  (model's fixed Kh/Kv = 10)
 
 

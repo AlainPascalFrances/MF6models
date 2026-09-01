@@ -4,6 +4,7 @@
     unit-layer pinches out (thickness ~0 because the unit is absent or entirely inside the host) it is a
     vertical PASS-THROUGH (idomain = -1).  U3 (basal) is always active.
 Produces proto_k_per_unit.png + proto_ibound_uzf.png (4 panels each) for validation, no model run."""
+import config
 import pickle, numpy as np, geopandas as gpd
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
@@ -15,8 +16,8 @@ from flopy.utils.gridintersect import GridIntersect
 from shapely.geometry import MultiPolygon
 from shapely.validation import make_valid
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 HYDRO = "dryad_modelo_nbs__gc_35a_cdl_hydrostrat"
 VL = WS / "conceptual" / "layers" / "voronoi_layers.npz"
 POND_SUBSET = [6, 12, 10, 18]; POND_DEPTH = 4.0; MIN_THK = 0.5; MIN_FLOOR = 0.1

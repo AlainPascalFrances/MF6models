@@ -8,6 +8,7 @@ smooth (Chaikin) the boundaries; make the Qi/PSM contact undulated (erosive). Th
   - cross_section_hydrostrat.png: merged -> unit 1 alluvium (Qat-NW, K=50), unit 2 terraces
                                   (Qi+Qae+small Qat), unit 3 Plio-Miocene (PSM+PSA)
 """
+import config
 import os
 import numpy as np
 import geopandas as gpd
@@ -18,8 +19,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import matplotlib.patheffects as pe
 
-OUT  = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+OUT  = (str(config.MODEL) + r"\conceptual")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 SHP  = os.path.join(OUT, "geology_crosssection_cdl.shp")
 halo = [pe.withStroke(linewidth=2.2, foreground="white")]
 

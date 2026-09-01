@@ -9,9 +9,10 @@ converge, resolves them on the Voronoi grid, then writes:
                                         load the CSV as points in QGIS to inspect alongside the GIS layers.
 
 Run it AFTER a failed run (re-run reproduces the same listing):
-    conda run -p C:/miniconda3/envs/flopy python diag_divergence.py [path\\to\\mfsim.lst]
+    conda run -p C:/sw/miniconda3/envs/mf6models python diag_divergence.py [path\\to\\mfsim.lst]
 MF6 listing numbering is 1-BASED (layer, node / reach); flopy arrays are 0-based -> the report shows both.
 """
+import config
 import re, sys, csv, numpy as np, geopandas as gpd, flopy
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
@@ -20,8 +21,8 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 LST = Path(sys.argv[1]) if len(sys.argv) > 1 else WS / "mfsim.lst"
 # Save the forensics alongside the run's other outputs in _output\<stamp>\ (stamp from
 # last_run_stamp.txt, written by the model). Falls back to the _output root if it's missing.

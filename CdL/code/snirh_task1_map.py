@@ -1,9 +1,10 @@
+import config
 import get_snirh as gs, geopandas as gpd, numpy as np, pandas as pd
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from shapely.geometry import Point
-OUT=Path(r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability"); OUT.mkdir(parents=True,exist_ok=True)
-GPKG=r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+OUT=Path((str(config.PEST) + r"\snirh_data_availability")); OUT.mkdir(parents=True,exist_ok=True)
+GPKG=(str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 CRS=3763
 ws=gpd.read_file(GPKG,layer="watershed_cdl_fixed").to_crs(CRS)
 ws_poly=ws.geometry.union_all(); buf=ws_poly.buffer(50_000)     # 50 km buffer

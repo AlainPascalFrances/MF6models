@@ -15,11 +15,12 @@ Weighting: RELATIVE weights within each group (head confidence; sfr inlet<outlet
 balance the three groups to comparable phi using the base-run residuals.  Zero weight
 where no data.  Writes cdl.pst in the template (backing up to cdl.interface.pst).
 """
+import config
 import re, shutil
 from pathlib import Path
 import numpy as np, pandas as pd, pyemu
 
-PEST = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+PEST = Path(str(config.PEST))
 TEMPLATE = PEST / "template"
 BASE_OBS = PEST / "master" / "cdl.base.obs.csv"         # base (initial-parameter) simulated obs
 SNIRH = PEST / "snirh_data_availability"
@@ -27,7 +28,7 @@ SYN_PIEZO = SNIRH / "cdl_synthetic_piezo.csv"           # regionalised P0-P6 wat
 INLET_OUTLET = SNIRH / "inlet_outlet_series.csv"        # regionalised inlet/outlet streamflow
 # SIM_START is read from the model's sidecar (single source of truth: set the date
 # ONLY in cdl_gwf_model_fable_v2.py). Fallback 1981 (full period) if not yet written.
-_SSF = Path(r"E:\00code_ws\DRYAD\CdL_model\last_sim_start.txt")
+_SSF = Path((str(config.MODEL) + r"\last_sim_start.txt"))
 SIM_START = pd.Timestamp(_SSF.read_text().strip()) if _SSF.exists() else pd.Timestamp(1981, 1, 1)
 SPINUP_NPER = 12
 
@@ -139,7 +140,7 @@ if "P4" in {str(p).upper() for p in syn["cdl"]}:
     _g4.index = _g4.index.to_period("M").to_timestamp()
     _p4_depth = _g4[~_g4.index.duplicated()]
 _otop = {}
-OUTLET_META = Path(r"E:\00code_ws\DRYAD\CdL_model") / "outlet_cells.csv"
+OUTLET_META = Path(str(config.MODEL)) / "outlet_cells.csv"
 if OUTLET_META.exists():
     _om = pd.read_csv(OUTLET_META)
     _otop = {str(k).lower(): float(v) for k, v in zip(_om["name"], _om["top"])}
@@ -162,7 +163,7 @@ for i in od.index[is_outlet]:
 # (1981-1990) carry weight; the climatology-filled gap months do NOT (exactly like the
 # piezometers, which are weighted only where the SNIRH analog has data). Falls back to the
 # constant long-term MEAN if the sidecar is absent (i.e. the model ran constant-inflow mode).
-SFR_SIDECAR = Path(r"E:\00code_ws\DRYAD\CdL_model\sfr_inlet_series.csv")
+SFR_SIDECAR = Path((str(config.MODEL) + r"\sfr_inlet_series.csv"))
 sfr_info = {i: re.search(r"usecol:(inlet|outlet)_time:(.+)$", i) for i in od.index[is_sfr]}
 n_sfr = 0
 if SFR_SIDECAR.exists():

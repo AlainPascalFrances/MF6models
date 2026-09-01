@@ -14,11 +14,12 @@ EITHER (pick one):
 earthaccess.login() auto-detects both.
 
 Run (in the flopy env):
-  conda run -p C:/miniconda3/envs/flopy python download_mod16.py
+  conda run -p C:/sw/miniconda3/envs/mf6models python download_mod16.py
 """
+import config
 import earthaccess
 
-OUT_DIR   = r"Y:\RS\MODIS4CDL"
+OUT_DIR   = str(config.MODIS_DIR)
 SHORT     = "MOD16A2GF"
 VERSION   = "061"
 BBOX      = (-8.8665, 38.7683, -8.7771, 38.8715)   # W, S, E, N  (CdL watershed, padded)

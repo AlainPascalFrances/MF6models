@@ -1,7 +1,8 @@
 """Nail the SFR-828 runaway: what are cell 2422 and reach 828, and what MVR providers feed reach 828?"""
+import config
 import numpy as np, flopy
 from pathlib import Path
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
+WS = Path(str(config.MODEL))
 C = 2422   # 0-based cell id from the listing's (4,2422)
 R = 828    # reach number from 1_GWF-SFR-(828)-inflow
 

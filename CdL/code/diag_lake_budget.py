@@ -1,9 +1,10 @@
 """Dump the LAK budget terms for the last converged period — to see what drains
 the perched lakes (evaporation vs leakage vs outflow)."""
+import config
 import numpy as np
 import flopy
 
-BUD = r"E:\00code_ws\DRYAD\CdL_model\cdl_gwf.lak.bud"
+BUD = (str(config.MODEL) + r"\cdl_gwf.lak.bud")
 cbb = flopy.utils.CellBudgetFile(BUD, precision="double")
 recs = [r.strip() for r in cbb.get_unique_record_names(decode=True)]
 kk = cbb.get_kstpkper()

@@ -18,13 +18,14 @@ Outputs -> E:\\00code_ws\\DRYAD\\CdL_pest\\snirh_data_availability\\
   snirh_piezo_series_raw.csv, cdl_synthetic_piezo.csv,
   piezo_synthetic_elevation.png, piezo_synthetic_depth.png
 """
+import config
 from pathlib import Path
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 import get_snirh as gs
 from get_snirh.constants import Parameters
 
-DIR   = Path(r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability")
+DIR   = Path((str(config.PEST) + r"\snirh_data_availability"))
 START, END = "1981-01-01", "2026-05-01"
 # nominal mean depth-to-water by landform (m) — anchors the synthetic mean level.
 # Adjust to your field knowledge (qualitative piezos: ~1.5-3 m valley, ~10-15 m uplands).

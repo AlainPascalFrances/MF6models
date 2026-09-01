@@ -1,6 +1,7 @@
 """Produce the per-layer K (NPF) maps from voronoi_layers.npz, building the K arrays EXACTLY as the
 MF6 model does (cdl_gwf_model_opusv1.py lines ~499-520).  Run after build_layers.py to inspect the K
 layers from the corrected hydrostratigraphy.  -> <OUT>\\layers\\k_layers_map.png"""
+import config
 import pickle, numpy as np, geopandas as gpd
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
@@ -8,8 +9,8 @@ import matplotlib.pyplot as plt
 import flopy
 from flopy.discretization import VertexGrid
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 VL = WS / "conceptual" / "layers" / "voronoi_layers.npz"
 OUT = WS / "conceptual" / "layers" / "k_layers_map.png"
 

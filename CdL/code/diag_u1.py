@@ -1,4 +1,5 @@
 """Fix test: dive coordinate = distance from the U1 polygon EDGE (~p1), not from U2 (~p2). U1 overlaps U2."""
+import config
 import os, numpy as np, geopandas as gpd, rasterio
 from rasterio import Affine
 from rasterio.enums import Resampling
@@ -6,9 +7,9 @@ from rasterio.features import rasterize
 from rasterio.transform import rowcol
 from scipy.ndimage import distance_transform_edt, gaussian_filter
 
-OUT = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-DEM  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+OUT = (str(config.MODEL) + r"\conceptual")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+DEM  = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
 HYDRO = "dryad_modelo_nbs__gc_35a_cdl_hydrostrat"; U1_BASE, DS = -10.0, 20
 
 with rasterio.open(DEM) as src:

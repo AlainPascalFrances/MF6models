@@ -14,6 +14,7 @@ Outputs in <OUT>\\layers\\ : GeoTIFF top/bot/thk per unit ; voronoi_layers.npz/.
 at the DISV centroids, MODFLOW-ready) ; layers_maps.png (top/bottom/thickness maps, 3x3) ;
 layers_check.png (cross-section validation vs the transect).
 """
+import config
 import os, csv, pickle
 import numpy as np
 import geopandas as gpd
@@ -27,11 +28,11 @@ from scipy.spatial import cKDTree
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-OUT = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
+OUT = (str(config.MODEL) + r"\conceptual")
 LAYDIR = os.path.join(OUT, "layers"); os.makedirs(LAYDIR, exist_ok=True)
-WS   = r"E:\00code_ws\DRYAD\CdL_model"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-DEM  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+WS   = str(config.MODEL)
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+DEM  = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
 HYDRO = "dryad_modelo_nbs__gc_35a_cdl_hydrostrat"
 
 # ---- recipe parameters (tunable) — user's 2026-06-23 revision ----

@@ -16,15 +16,16 @@ NOTE: all work is under `if __name__ == "__main__"` — pyEMU's kriging spawns w
 processes on Windows, which re-import this module; unguarded top-level code would
 re-run the whole build in every child and deadlock.
 """
+import config
 import shutil, pickle, multiprocessing
 from pathlib import Path
 import numpy as np, pandas as pd, pyemu
 from scipy.spatial import cKDTree
 from flopy.discretization import VertexGrid
 
-PEST = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+PEST = Path(str(config.PEST))
 ORG, TEMPLATE = PEST / "org", PEST / "template"
-CODE = Path(r"E:\00code\flopy\dryad_cdl")
+CODE = Path(str(config.CODE))
 
 
 def _flat(p, dt=float):                              # wrapped MF6 array -> flat 1-D
@@ -199,16 +200,17 @@ def main():
 
     # ---- FIRST-ORDER TIKHONOV (preferred-difference / smoothness) on the Kh pilot points ----
     # The geostatistical PRIOR (prior_pe.jcb) makes neighbouring pilot points co-vary, but the IES
-    # UPDATE still roughens the field (an un-regularised 3-iteration run drove ~59% of pilot points
-    # to their bounds -> posterior negative Moran's I / checkerboard). Add explicit Tikhonov
-    # regularisation - prior-information equations penalising the LOG-K DIFFERENCE between spatially-
-    # correlated pilot points (preferred difference = 0 -> smooth field), built from the geostruct
-    # prior COVARIANCE (also saved as prior_cov.jcb). These enter the IES COMPOSITE phi only when
-    # ies_reg_factor>0 (set in run_ies.py) - that factor is the smoothness STRENGTH knob. abs_drop_tol
-    # keeps only pilot-point pairs whose prior correlation exceeds it (true neighbours), so the
-    # equation count stays modest - important: pestpp-ies 5.2.27 heap-crashes when reg is active with
-    # a large ensemble x many PI eqs, so ~1-1.5k equations (tol 0.60) keeps the 150-real load safe.
-    TIK_DROP_TOL = 0.60
+    # UPDATE still roughens the field: the 3-iteration run drove ~59% of pilot points to their bounds
+    # (posterior negative Moran's I / checkerboard). Add explicit Tikhonov regularisation — prior-
+    # information equations that penalise the LOG-K DIFFERENCE between spatially-correlated pilot
+    # points (preferred difference = 0 -> smooth field), built from the geostruct prior COVARIANCE
+    # (also saved as prior_cov.jcb). These enter the IES COMPOSITE phi only when ies_reg_factor>0
+    # (set in run_ies.py) — that factor is the smoothness STRENGTH knob. abs_drop_tol keeps only
+    # pilot-point pairs whose prior correlation exceeds it (true neighbours), so the equation count
+    # stays sane; BC constants (no geostruct -> uncorrelated) are dropped automatically.
+    TIK_DROP_TOL = 0.60   # keep only the closest-neighbour smoothness pairs: ~8.5k PI eqs at 0.20
+                          # crashed pestpp-ies at 150 reals (composite-phi scaling bug); 0.60 -> ~1-1.5k,
+                          # keeping 150-real reg load below the 30-real level that ran clean.
     cov = pf.build_prior(fmt="binary", filename=str(TEMPLATE / "prior_cov.jcb"))
     pyemu.helpers.first_order_pearson_tikhonov(pst, cov, reset=True, abs_drop_tol=TIK_DROP_TOL)
     print(f"   Tikhonov: {pst.prior_information.shape[0]} first-order (smoothness) PI equations "
@@ -219,13 +221,16 @@ def main():
     # forward_run.py stub (no mf6, no AET). Copying ours afterward overwrites that
     # stub. (Copying before -> build_pst clobbers ours -> the base run does apply
     # only, mf6 never runs, obs files missing -> "model_aet_zonal.csv not found".)
-    for f in ("forward_run.py", "model_aet_zonal.py", "obs_collapse.py"):
+    for f in ("forward_run.py", "model_aet_zonal.py", "obs_collapse.py", "config.py"):
         shutil.copy2(CODE / f, TEMPLATE / f)
     shutil.copy2(PEST / "cos_zones.npz", TEMPLATE / "cos_zones.npz")
 
     # full path to the flopy-env python — PEST++ spawns the model command from the
     # system shell, where bare "python" would not resolve to the conda env.
-    pst.model_command = r"C:\miniconda3\envs\flopy\python.exe forward_run.py"
+    # NOTE: this must be a REAL, fully-installed env on the machine the workers run on.
+    # The C:\sw\miniconda3\envs\mf6models env on Lnegdrymodelmod is an empty stub
+    # (DLLs\ + Library\ only, no python.exe), so point at the working AppData env.
+    pst.model_command = (config.PYTHON_EXE + r" forward_run.py")
     pst.control_data.noptmax = 0                          # 0 = one run to check the interface
     pst.write(str(TEMPLATE / "cdl.pst"), version=2)
 

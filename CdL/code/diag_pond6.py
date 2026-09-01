@@ -1,7 +1,8 @@
 """Why does pond 6 fail at TS=1? Inspect cell 1840's layer stack + the lake stage vs the GW initial head there."""
+import config
 import numpy as np, flopy
 from pathlib import Path
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
+WS = Path(str(config.MODEL))
 sim = flopy.mf6.MFSimulation.load(sim_ws=str(WS), verbosity_level=0)
 gwf = sim.get_model()
 disv = gwf.get_package("DISV"); top = disv.top.array; botm = disv.botm.array; idom = disv.idomain.array

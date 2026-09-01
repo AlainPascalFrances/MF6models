@@ -2,6 +2,7 @@
 spin-up heads (spinup_heads.npy).  Plots water-table elevation, depth to water table, and the
 per-layer head field on the Voronoi grid, and quantifies the lake-stage vs surrounding-water-table
 mismatch that makes SP1 stiff.  -> WORKSPACE\\initial_conditions_map.png"""
+import config
 import pickle, numpy as np, geopandas as gpd
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -11,8 +12,8 @@ from flopy.discretization import VertexGrid
 from shapely.geometry import Point
 from shapely.validation import make_valid
 
-WORKSPACE = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WORKSPACE = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 VLAYERS = WORKSPACE / "conceptual" / "layers" / "voronoi_layers.npz"
 HEADS = WORKSPACE / "spinup_heads.npy"
 POND_SUBSET = [6, 12]            # the 2 modelled ponds (positional FID)

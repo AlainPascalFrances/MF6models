@@ -4,17 +4,18 @@ Builds the topographic-section transect  START(SE watershed divide) -> ERT P1 ->
 Writes  <OUT>/profile_data.npz , consumed by  cross_section.py  (STEP 2).
 
 Run in the flopy env, e.g.:
-  & "C:\miniconda3\Scripts\conda.exe" run -p C:\miniconda3\envs\flopy --no-capture-output python -u build_profile.py
+  & "C:\miniconda3\Scripts\conda.exe" run -p C:\sw\miniconda3\envs\mf6models --no-capture-output python -u build_profile.py
 """
+import config
 import os
 import numpy as np
 import geopandas as gpd
 import rasterio
 from shapely.geometry import LineString, Point
 
-OUT  = r"E:\00code_ws\DRYAD\CdL_model\conceptual"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-DEM  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
+OUT  = (str(config.MODEL) + r"\conceptual")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+DEM  = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
 STEP = 2.0  # along-transect sampling interval (m)
 os.makedirs(OUT, exist_ok=True)
 

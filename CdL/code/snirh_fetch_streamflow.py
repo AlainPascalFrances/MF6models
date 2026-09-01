@@ -14,12 +14,13 @@ discovered live via fetch_parameters (label ~ 'caudal').
 Outputs -> E:\\00code_ws\\DRYAD\\CdL_pest\\snirh_data_availability\\
   streamflow_20E02H_1981_1990.csv/.png, streamflow_comparison.csv/.png
 """
+import config
 from pathlib import Path
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 import get_snirh as gs
 
-DIR = Path(r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability")
+DIR = Path((str(config.PEST) + r"\snirh_data_availability"))
 # code -> (uid, drainage_area_km2, river label)
 STN = {
     "20E/02H": ("1627759236", 979.67, "Ponte Santo Estêvão (Almansor)"),

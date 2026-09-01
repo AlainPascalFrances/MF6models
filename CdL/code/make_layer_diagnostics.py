@@ -2,6 +2,7 @@
   - k_layers_map.png   : Kh per MF6 layer, ONE shared K colour ramp + a single colorbar
   - ibound_uzf_map.png : idomain (ibound) per MF6 layer + the UZF surface boundary (iuzfbnd)
 The 3 MF6 numerical layers are NOT the 3 geologic units (see titles)."""
+import config
 import pickle, numpy as np, geopandas as gpd
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
@@ -13,8 +14,8 @@ from flopy.utils.gridintersect import GridIntersect
 from shapely.geometry import MultiPolygon
 from shapely.validation import make_valid
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 HYDRO = "dryad_modelo_nbs__gc_35a_cdl_hydrostrat"
 VL = WS / "conceptual" / "layers" / "voronoi_layers.npz"
 POND_SUBSET = [6, 12, 10, 18]                 # must match the model

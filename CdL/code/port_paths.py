@@ -20,20 +20,20 @@ from pathlib import Path
 
 # ------------------------------------------------------------------ config
 # Folder to process (default: the code folder next to this script).
-TARGET_DIR = Path(__file__).resolve().parent / "code"
+TARGET_DIR = Path(__file__).resolve().parent
 
 # (label, OLD prefix, NEW prefix)  — fill the NEW column for your machine.
 # OLD values are the six prefixes from 02_PATHS_TO_CHANGE.md (full, real strings).
 REPLACEMENTS = [
-    ("1 DATA_ROOT",  r"E:\00code_ws\DRYAD",                                                        r""),   # e.g. r"D:\DRYAD\work"
-    ("2 CODE_DIR",   r"E:\00code\flopy\dryad_cdl",                                                 r""),   # e.g. r"D:\DRYAD\MF6models\CdL\code"
-    ("3 GIS_ROOT",   r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD", r""),   # e.g. r"D:\DRYAD\gis"
-    ("4 COS_TIF",    r"E:\ArcGis_Data\WorkSpace\COS\COSc2025\COSc_2025_N3_v0_TM06.tif",             r""),   # your COS raster path
-    ("5 MODFLOW",    r"C:\00MODFLOW",                                                              r""),   # your MODFLOW / PEST++ root
-    ("6 CONDA_ENV",  r"C:\miniconda3\envs\flopy",                                                  r""),   # your conda env prefix
+    ("1 DATA_ROOT",  r"E:\00code_ws\DRYAD",                                                        r"X:\3p1p1\DR3PDA1\CdL_model"),   # e.g. r"D:\DRYAD\work"
+    ("2 CODE_DIR",   r"E:\00code\flopy\dryad_cdl",                                                 r"X:\3p1p1\DR3PDA1\code"),   # e.g. r"D:\DRYAD\MF6models\CdL\code"
+    ("3 GIS_ROOT",   r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD", r"X:\3p1p1\DR3PDA1\CdL_model\gis"),   # e.g. r"D:\DRYAD\gis"
+    ("4 COS_TIF",    r"E:\ArcGis_Data\WorkSpace\COS\COSc2025\COSc_2025_N3_v0_TM06.tif",             r"X:\3p1p1\DR3PDA1\CdL_model\gis\COSc2025"),   # your COS raster path
+    ("5 MODFLOW",    r"C:\00MODFLOW",                                                              r"C:\sw\MODFLOWandCo\mf6.7.0_win64\bin"),   # your MODFLOW / PEST++ root
+    ("6 CONDA_ENV",  r"C:\miniconda3\envs\flopy",                                                  r"C:\sw\miniconda3\envs\mf6models"),   # your conda env prefix
 ]
 
-DRY_RUN     = True      # True = preview only (no files written); False = apply the changes
+DRY_RUN     = False      # True = preview only (no files written); False = apply the changes
 MAKE_BACKUP = True      # keep a <file>.bak next to each modified file
 ALSO_SLASH  = True      # also replace the forward-slash form of each Windows path (some appear as E:/...)
 TEXT_EXT    = {".py", ".md", ".txt", ".json", ".yml", ".yaml", ".cfg", ".ini",

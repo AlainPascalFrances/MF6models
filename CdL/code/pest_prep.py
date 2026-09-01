@@ -5,14 +5,15 @@ data to external files, and writes a clean copy to CdL_pest\org (inputs only).
 Also drops in example output files (heads csv, zonal-AET csv) that add_observations
 will read for their format.
 """
+import config
 import shutil
 from pathlib import Path
 import flopy
 
-WS   = Path(r"E:\00code_ws\DRYAD\CdL_model")
-PEST = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+WS   = Path(str(config.MODEL))
+PEST = Path(str(config.PEST))
 ORG  = PEST / "org"
-MF6  = r"C:\00MODFLOW\mf6.7.0_win64\bin\mf6.exe"
+MF6  = config.MF6_EXE
 
 if ORG.exists():
     shutil.rmtree(ORG)
@@ -35,7 +36,7 @@ if (WS / "cdl_gwf.obs.sfr.csv").exists():                # SFR inlet/outlet stre
 
 # Collapse the reference head/sfr obs to STRESS-PERIOD-END rows (drop ATS sub-steps),
 # so the positional .ins that build_pst generates expects a DETERMINISTIC NPER rows —
-# exactly what forward_run.py collapses every run to.  Without this, realisations whose
+# exactly what forward_run.py collapses every run to.  Without this, realizations whose
 # ATS sub-stepping differs from the reference misalign the .ins and fail. (obs_collapse.py)
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).parent))

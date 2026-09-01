@@ -24,6 +24,7 @@ Run in the activated env, e.g.:
 ================================================================================
 """
 
+import config
 import re
 from pathlib import Path
 from datetime import datetime
@@ -36,7 +37,7 @@ import matplotlib.patheffects as patheffects
 import flopy
 
 # --- CONFIG (keep in sync with cdl_gwf_model_opusv1.py) ----------------------
-WORKSPACE   = Path(r"E:\00code_ws\DRYAD\CdL_model")
+WORKSPACE = Path(str(config.MODEL))
 MODEL_NAME  = "cdl_gwf"
 # SIM_START MUST match the model run. The model writes its start date to
 # last_sim_start.txt; read it so postproc auto-syncs to whatever window the model
@@ -45,16 +46,16 @@ _ssf = WORKSPACE / "last_sim_start.txt"
 SIM_START = pd.Timestamp(_ssf.read_text().strip()) if _ssf.exists() else pd.Timestamp(1981, 1, 1)
 print(f">> SIM_START = {SIM_START.date()} ({'from last_sim_start.txt' if _ssf.exists() else 'fallback 1981'})")
 SPINUP_NPER = 12          # SS period 0 + 11 transient spin-up months -> first 12 SPs
-GPKG        = r"E:/zzCloud/OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia/DRYAD/GIS/dryad_modelo_NbS.gpkg"
+GPKG        = WORKSPACE / "gis" / "dryad_modelo_NbS.gpkg"
 OBS_LAYER   = "obs_points_cdl"
-P_CSV       = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\p_month_198101_202605.csv"
-ET_CSV      = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\et0_month_198101_202605.csv"
+P_CSV  = WORKSPACE / "forcing" / "p_month_198101_202605.csv"
+ET0_CSV = WORKSPACE / "forcing" / "et0_month_198101_202605.csv"
 
-PIEZO_XLSX  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\piezos_qualitative_month_198101_202605.xlsx"
+PIEZO_XLSX  = (str(config.PEST) + r"\snirh_data_availability\piezos_qualitative_month_198101_202605.xlsx")
 # SYNTHETIC piezometer heads (regionalised from SNIRH analogs) — the real observation
 # overlay for obs_head_timeseries.png, REPLACING the qualitative placeholders above.
 # Long format: cdl (P0..P6), snirh, date, wl_elev_m, depth_m. Falls back to the xlsx if absent.
-SYN_PIEZO_CSV = r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability\cdl_synthetic_piezo.csv"
+SYN_PIEZO_CSV = (str(config.PEST) + r"\snirh_data_availability\cdl_synthetic_piezo.csv")
 
 # Match the model run's start stamp (written by the main script) so preproc\<stamp>\
 # and postproc\<stamp>\ correspond to the same run; fall back to now if absent.

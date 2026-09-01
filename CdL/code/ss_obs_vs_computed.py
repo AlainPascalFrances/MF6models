@@ -1,6 +1,7 @@
 """Scatter of OBSERVED vs COMPUTED steady-state heads at the 7 piezometers (1:1 line + stats).
 Reads spinup_heads.npy (the SS water table) + the SYNTHETIC piezo targets (SNIRH-regionalised,
 same source as obs_head_timeseries.png).  Saves into the model's input folder (_input/<stamp>/)."""
+import config
 import pickle, re, numpy as np, pandas as pd, geopandas as gpd
 from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
@@ -8,12 +9,12 @@ import matplotlib.pyplot as plt
 from flopy.discretization import VertexGrid
 from scipy.spatial import cKDTree
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 # OBSERVED heads = synthetic water-table elevations regionalised from SNIRH analogs; the
 # qualitative Excel is kept only as a fallback if the synthetic csv is unavailable.
-SYN_PIEZO_CSV = r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability\cdl_synthetic_piezo.csv"
-XLSX = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\piezos_qualitative_month_198101_202605.xlsx"
+SYN_PIEZO_CSV = (str(config.PEST) + r"\snirh_data_availability\cdl_synthetic_piezo.csv")
+XLSX = (str(config.MODEL) + r"\gis\WP3_modeling\3.1.1\modelo_numerico\piezos_qualitative_month_198101_202605.xlsx")
 stamp = (WS / "last_run_stamp.txt").read_text().strip()
 OUT = WS / "_input" / stamp        # match the model's PREPROC_DIR (= _input\<stamp>); NOT the old preproc\
 OUT.mkdir(parents=True, exist_ok=True)

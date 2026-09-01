@@ -11,6 +11,7 @@ Self-contained D8 flow routing (no flow-routing library needed):
 
 -> prints a per-pond table and writes diag\pond_catchments.png (accumulation + ponds).
 """
+import config
 import heapq
 import numpy as np
 import rasterio
@@ -25,9 +26,9 @@ from pyproj import CRS
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-DEM   = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif"
-GPKG  = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-OUT   = r"E:\00code_ws\DRYAD\CdL_model\diag\pond_catchments.png"
+DEM   = (str(config.MODEL) + r"\gis\GIS\Geodatabase_LIDAR_DGT\Geodatabase_CdL\dem_cdl.tif")
+GPKG  = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+OUT   = (str(config.MODEL) + r"\diag\pond_catchments.png")
 TARGET = CRS.from_epsg(3763)
 DS = 40   # 0.5 m DEM -> 20 m working grid (drainage areas don't need finer)
 DEEP_U3 = {1, 2, 3, 8, 9, 10, 12, 13, 14}   # the recharge-fallback ponds (L4 connectors)
@@ -123,7 +124,7 @@ for fid in range(len(ponds)):
 
 # ---- save per-pond areas for the model (recharge fallback reads this) ----
 import csv
-CSVOUT = r"E:\00code_ws\DRYAD\CdL_model\pond_catchments.csv"
+CSVOUT = (str(config.MODEL) + r"\pond_catchments.csv")
 with open(CSVOUT, "w", newline="") as f:
     wtr = csv.writer(f); wtr.writerow(["fid", "pond_area_m2", "catchment_area_m2", "ratio"])
     for fid in sorted(results):

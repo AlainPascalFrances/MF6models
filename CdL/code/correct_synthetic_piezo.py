@@ -11,11 +11,12 @@ Corrections (in this order):
      sensible [min, max] range (user-specified below).  wl_elev is recomputed = ground - depth
      (ground = wl_elev + depth, constant per point in the raw series).
 """
+import config
 import shutil
 from pathlib import Path
 import numpy as np, pandas as pd
 
-CSV = Path(r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability\cdl_synthetic_piezo.csv")
+CSV = Path((str(config.PEST) + r"\snirh_data_availability\cdl_synthetic_piezo.csv"))
 RAW = CSV.with_name("cdl_synthetic_piezo_raw.csv")
 
 # depth-to-water-table range [min, max] (m below ground) per piezometer
@@ -36,8 +37,8 @@ df = pd.read_csv(RAW, parse_dates=["date"])
 # stops the corrected WT crossing the surface where model_top < synthetic ground. Fallback: synthetic.
 import flopy, geopandas as gpd
 from scipy.spatial import cKDTree
-GRB = r"E:\00code_ws\DRYAD\CdL_model\cdl_gwf.disv.grb"
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+GRB = (str(config.MODEL) + r"\cdl_gwf.disv.grb")
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 OBS_LAYER = "obs_points_cdl"
 model_ground = {}
 try:

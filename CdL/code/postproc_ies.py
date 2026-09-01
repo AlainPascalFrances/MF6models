@@ -12,20 +12,22 @@ Adapts to the run mode:
   NOPTMAX 0  -> base run: uses cdl.base.obs.csv (single simulated series)
   NOPTMAX -1 -> prior MC: uses cdl.0.obs.csv (prior ensemble)
   NOPTMAX >0 -> IES: uses cdl.0.obs.csv (prior) + cdl.N.obs.csv (posterior)
-Run:  conda run -p C:/miniconda3/envs/flopy python postproc_ies.py
+Run:  in the mf6models env (e.g. from Spyder), or from a shell:
+      conda run -p C:/Users/su-alain.frances/AppData/Local/miniconda3/envs/mf6models python postproc_ies.py
 """
+import config
 import glob, re
 from pathlib import Path
 import numpy as np, pandas as pd, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
 import pyemu
 
-PEST   = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+PEST   = Path(str(config.PEST))
 MASTER = PEST / "master"
 OUT    = PEST / "ies_output"; OUT.mkdir(exist_ok=True)
 CASE   = "cdl"
 # SIM_START from the model's sidecar (single source of truth = cdl_gwf_model_fable_v2.py).
-_SSF = Path(r"E:\00code_ws\DRYAD\CdL_model\last_sim_start.txt")
+_SSF = Path((str(config.MODEL) + r"\last_sim_start.txt"))
 SIM_START = pd.Timestamp(_SSF.read_text().strip()) if _SSF.exists() else pd.Timestamp(1981, 1, 1)
 SPINUP_NPER = 12
 

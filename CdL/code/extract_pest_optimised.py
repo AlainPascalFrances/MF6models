@@ -17,11 +17,12 @@ CAVEAT: in this IES 5/9 param groups railed to their bounds (uninformative data)
 -> these are data-fitting values, not physical estimates.  Kept for inspection
 and to exercise the import machinery for the next (data-driven) calibration.
 """
+import config
 import shutil, multiprocessing
 from pathlib import Path
 import numpy as np, pandas as pd, pyemu
 
-PEST     = Path(r"E:\00code_ws\DRYAD\CdL_pest")
+PEST     = Path(str(config.PEST))
 TEMPLATE = PEST / "template"
 MASTER   = PEST / "master"
 ORG      = PEST / "org"

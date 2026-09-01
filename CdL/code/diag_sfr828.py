@@ -1,7 +1,8 @@
 """Find the source of the ~126000 m3/d SFR throughflow: lake budget + reaches with the largest MVR/JA inflows."""
+import config
 import numpy as np, flopy
 from pathlib import Path
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
+WS = Path(str(config.MODEL))
 
 st = flopy.utils.HeadFile(WS / "cdl_gwf.lak.stage", text="STAGE")
 print("lake stages (t=%.0f d): %s" % (st.get_times()[-1], st.get_data(totim=st.get_times()[-1]).ravel()))

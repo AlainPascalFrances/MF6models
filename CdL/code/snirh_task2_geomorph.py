@@ -1,10 +1,11 @@
+import config
 import geopandas as gpd, numpy as np, pandas as pd, rasterio
 from rasterio.windows import from_bounds
 from scipy.ndimage import uniform_filter
 from pathlib import Path
-OUT=Path(r"E:\00code_ws\DRYAD\CdL_pest\snirh_data_availability")
+OUT=Path((str(config.PEST) + r"\snirh_data_availability"))
 DEM=r"OpenFileGDB:E:\ArcGis_Data\WorkSpace\MDT_ESA\DEM_PI.gdb:DEM_EU_DEM_PI"
-GPKG=r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+GPKG=(str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 DEMCRS=3035
 # piezo sets
 pz=gpd.read_file(OUT/"snirh_piezo_T3T7_50km.gpkg").to_crs(DEMCRS)

@@ -7,6 +7,7 @@ water table (no-lake SS heads in spinup_heads.npy).
 Segments the 19 ponds into 'in-contact' (LAK behaves) vs 'perched' (the hard ones),
 and flags good Phase-0 subset candidates. Files on disk only; no MODFLOW run.
 """
+import config
 import pickle
 import numpy as np
 import geopandas as gpd
@@ -17,11 +18,11 @@ from pyproj import CRS
 from flopy.discretization import VertexGrid
 from flopy.utils.gridintersect import GridIntersect
 
-WS      = r"E:\00code_ws\DRYAD\CdL_model"
+WS      = str(config.MODEL)
 WS_PKL  = WS + r"\voronoi_grid.pkl"
 HEADS   = WS + r"\spinup_heads.npy"                          # (nlay, ncpl) no-lake SS IC
 LAYERS  = WS + r"\conceptual\layers\voronoi_layers.npz"     # has 'top'
-GPKG    = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+GPKG    = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 TARGET  = CRS.from_epsg(3763)
 POND_DEPTH = 4.0
 

@@ -1,11 +1,12 @@
 """Dump the LAK stage trajectory per lake per stress period (to diagnose a LAK
 water-balance failure). Tries the binary STAGE file; falls back to parsing the
 PRINT_STAGE tables in the GWF listing."""
+import config
 import re
 import numpy as np
 import flopy
 
-WS = r"E:\00code_ws\DRYAD\CdL_model"
+WS = str(config.MODEL)
 STG = WS + r"\cdl_gwf.lak.stage"
 LST = WS + r"\cdl_gwf.lst"
 

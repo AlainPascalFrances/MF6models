@@ -11,6 +11,7 @@ Reads the WRITTEN model (cdl_gwf.nam) and is STALE-PROOF:
 
 Output: diag\sfr_ponds_zoom_p<N>.png (PONDS_PER_PAGE panels per page, all ponds).
 """
+import config
 import pickle
 from pathlib import Path
 import numpy as np
@@ -26,8 +27,8 @@ from pyproj import CRS
 from flopy.discretization import VertexGrid
 from flopy.utils.gridintersect import GridIntersect
 
-WS      = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG    = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+WS      = Path(str(config.MODEL))
+GPKG    = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 TARGET  = CRS.from_epsg(3763)
 MARGIN  = 25.0                  # m around each pond bbox
 PONDS_PER_PAGE = 6              # 2 x 3 panels per page

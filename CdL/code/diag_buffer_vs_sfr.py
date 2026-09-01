@@ -8,6 +8,7 @@ Clarify: STREAM_BUFFER (refinement corridor) vs SFR cells (channel centreline).
 SFR is a ~1-cell-wide thread down the spine of the (120 m-wide) corridor, so
 refined-cell-count >> SFR-cell-count.  Also writes a zoom figure.
 """
+import config
 import pickle
 from pathlib import Path
 import numpy as np
@@ -23,10 +24,10 @@ from pyproj import CRS
 from flopy.discretization import VertexGrid
 from flopy.utils.gridintersect import GridIntersect
 
-WS      = r"E:\00code_ws\DRYAD\CdL_model"
+WS      = str(config.MODEL)
 WS_PKL  = WS + r"\voronoi_grid.pkl"
 SFR_PKG = WS + r"\cdl_gwf.sfr"
-GPKG    = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
+GPKG    = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
 TARGET  = CRS.from_epsg(3763)
 STREAM_BUFFER = 60.0      # must match the model
 

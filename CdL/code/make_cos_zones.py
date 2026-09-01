@@ -6,6 +6,7 @@ zone-mean AET) to form the ET observation group.
 
 Outputs (in CdL_pest): cos_zones.npz (cos_class, zone_id per cell), .csv, .png
 """
+import config
 import pickle, numpy as np, matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from pathlib import Path
@@ -15,9 +16,9 @@ from rasterio.mask import mask as rmask
 from shapely.geometry import Polygon, Point
 from flopy.discretization import VertexGrid
 
-WORKSPACE = Path(r"E:\00code_ws\DRYAD\CdL_model")
-PEST_DIR  = Path(r"E:\00code_ws\DRYAD\CdL_pest"); PEST_DIR.mkdir(parents=True, exist_ok=True)
-COS_TIF   = r"E:\ArcGis_Data\WorkSpace\COS\COSc2025\COSc_2025_N3_v0_TM06.tif"
+WORKSPACE = Path(str(config.MODEL))
+PEST_DIR  = Path(str(config.PEST)); PEST_DIR.mkdir(parents=True, exist_ok=True)
+COS_TIF   = (str(config.MODEL) + r"\gis\COSc2025")
 
 # COS N3 class -> (zone_id, zone_name).  Grouping mirrors the extdp rooting-depth classes.
 ZONE_DEF = {

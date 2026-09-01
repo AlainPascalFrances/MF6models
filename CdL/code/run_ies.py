@@ -11,21 +11,17 @@ import os
 import shutil
 from pathlib import Path
 import pyemu
+from config import PEST, PESTPP_IES          # machine paths live in config.py (edit there, not here)
 
-PEST     = Path(r"E:\00code_ws\DRYAD\CdL_pest")
 TEMPLATE = PEST / "template"
 MASTER   = PEST / "master"
 WORKERROOT = PEST / "workers"
-PESTPP_IES = r"C:\00MODFLOW\pestpp\pestpp-ies.exe"
 
 # ======================================================================================
-# SERVER-MIGRATION CHECKLIST (moving off the laptop for the big 150-real IES) — edit these:
-#   1. PEST / TEMPLATE / MASTER / WORKERROOT   base paths below
-#   2. PESTPP_IES  path to pestpp-ies.exe on the server
-#   3. build_pst.py line ~189  pst.model_command python path (C:\miniconda3\envs\flopy\python.exe)
-#   4. NUM_WORKERS  = number of physical cores you want to give it (server has more -> raise)
-#   Re-run the FULL chain on the server (model -> pest_prep -> build_pst -> base run -> make_obs)
-#   so the prior_pe.jcb / prior_cov.jcb and org/template are rebuilt with the server's paths.
+# MOVING TO A NEW MACHINE: edit the three roots in config.py (BASE / MODFLOW_DIR / PYTHON_EXE)
+# — all disk paths derive from those. Only NUM_WORKERS (physical cores) is set here.
+#   Then re-run the FULL chain (model -> pest_prep -> build_pst -> base run -> make_obs)
+#   so the prior_pe.jcb / prior_cov.jcb and org/template are rebuilt.
 # ======================================================================================
 NUM_WORKERS = 12       # raise on the server (one worker per physical core)
 # NOPTMAX = 0 — single base run (~15 min): confirms the base phi with real targets before committing to the ensemble.

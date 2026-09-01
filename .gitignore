@@ -33,3 +33,6 @@ mfsim.lst
 
 # NOTE: the small bundled inputs under CdL/input_data/ ARE committed on purpose
 # (gpkg, forcing csv, soils tif, grid caches, npz). Only the two large rasters above are excluded.
+
+# Spyder project
+.spyproject/

@@ -1,13 +1,14 @@
 """Diagnose the no-lake steady-state water table vs the (qualitative) observed piezometers.
 Samples spinup_heads.npy at each obs point and tabulates model vs observed head & depth-to-water."""
+import config
 import pickle, re, numpy as np, pandas as pd, geopandas as gpd
 from pathlib import Path
 from flopy.discretization import VertexGrid
 from scipy.spatial import cKDTree
 
-WS = Path(r"E:\00code_ws\DRYAD\CdL_model")
-GPKG = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\GIS\dryad_modelo_NbS.gpkg"
-XLSX = r"E:\zzCloud\OneDrive - LNEG - Laboratorio Nacional de Energia e Geologia\DRYAD\WP3_modeling\3.1.1\modelo_numerico\piezos_qualitative_month_198101_202605.xlsx"
+WS = Path(str(config.MODEL))
+GPKG = (str(config.MODEL) + r"\gis\GIS\dryad_modelo_NbS.gpkg")
+XLSX = (str(config.MODEL) + r"\gis\WP3_modeling\3.1.1\modelo_numerico\piezos_qualitative_month_198101_202605.xlsx")
 
 # grid + surfaces + SS heads
 with open(WS / "voronoi_grid.pkl", "rb") as f:
