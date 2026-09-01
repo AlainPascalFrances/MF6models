@@ -45,7 +45,7 @@ become:
 | 5 | `C:\00MODFLOW` | `C:\sw\MODFLOW` |
 | 6 | `C:\miniconda3\envs\flopy` | `C:\sw\miniconda3\envs\mf6models` |
 
-`<DATA_ROOT>` used below = prefix #1 = `D:\DRYAD\work`.
+`<DATA_ROOT>` used below = prefix #1 = `X:\3p1p1\DR3PDA1`.   #D:\DRYAD\work
 
 ---
 
@@ -69,7 +69,7 @@ git clone https://github.com/AlainPascalFrances/MF6models.git
 From the repo root:
 
 ```bash
-cd /d D:\DRYAD\MF6models
+cd /d X:\3p1p1\MF6models   #D:\DRYAD\MF6models
 conda env create -f environment.yml
 conda activate mf6models
 ```
