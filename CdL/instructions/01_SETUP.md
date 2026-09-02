@@ -19,7 +19,7 @@ Keep **tools**, the **repo**, and the **working data** separate. Suggested layou
 ```
 C:\sw\                                  ← software / tools
 ├── miniconda3\                         ← Miniconda (Python 3.12 base + the 'mf6models' env)
-└── MODFLOW\                            ← all binaries in one place (this becomes prefix #5 = C:\sw\MODFLOW)
+└── MODFLOW\                            ← all binaries in one place (this becomes MODFLOW_DIR = C:\sw\MODFLOW)
     ├── mf6.7.0\bin\mf6.exe
     ├── triangle\triangle.exe
     └── pestpp-5.2.16\pestpp-ies.exe (+ the other pestpp-*.exe)
@@ -33,19 +33,19 @@ D:\DRYAD\                               ← project root (any drive with ≥ ~60
 └── gis\                               ← large GIS rasters (DEM, COS) — see ../input_data/LARGE_DATA_MANIFEST.md
 ```
 
-With this layout the **six path prefixes** (full detail in [`02_PATHS_TO_CHANGE.md`](02_PATHS_TO_CHANGE.md))
-become:
+With this layout, the **three settings** in [`CdL/code/config.py`](../code/config.py) (full detail in
+[`02_PATHS_TO_CHANGE.md`](02_PATHS_TO_CHANGE.md)) become:
 
-| # | Old prefix | New value |
-|---|---|---|
-| 1 | `E:\00code_ws\DRYAD` | `D:\DRYAD\work` (holds `CdL_model` + `CdL_pest`) |
-| 2 | `E:\00code\flopy\dryad_cdl` | `D:\DRYAD\MF6models\CdL\code` |
-| 3 | `E:\zzCloud\OneDrive …\DRYAD` | `D:\DRYAD\gis` (or point vars at `input_data\`) |
-| 4 | `E:\ArcGis_Data\…COS…tif` | `D:\DRYAD\gis\COSc_2025_N3_v0_TM06.tif` |
-| 5 | `C:\00MODFLOW` | `C:\sw\MODFLOW` |
-| 6 | `C:\miniconda3\envs\flopy` | `C:\sw\miniconda3\envs\mf6models` |
+| `config.py` setting (env var) | New value |
+|---|---|
+| `BASE` (`CDL_BASE`) — data root holding `CdL_model` + `CdL_pest` | `D:\DRYAD\work` |
+| `MODFLOW_DIR` (`CDL_MODFLOW_DIR`) — the executables | `C:\sw\MODFLOW` |
+| `PYTHON_EXE` (`CDL_PYTHON_EXE`) — env python for PEST++ workers | `C:\sw\miniconda3\envs\mf6models\python.exe` |
 
-`<DATA_ROOT>` used below = prefix #1 = `X:\3p1p1\DR3PDA1`.   #D:\DRYAD\work
+Everything else (`MODEL`, `PEST`, `MF6_EXE`, `TRIANGLE_EXE`, `PESTPP_IES`, …) is derived from these.
+The `CdL/code` folder locates itself, so the repo can live anywhere.
+
+`<DATA_ROOT>` used below = `config.BASE` (e.g. `D:\DRYAD\work`).
 
 ---
 
@@ -69,7 +69,7 @@ git clone https://github.com/AlainPascalFrances/MF6models.git
 From the repo root:
 
 ```bash
-cd /d X:\3p1p1\MF6models   #D:\DRYAD\MF6models
+cd /d D:\DRYAD\MF6models
 conda env create -f environment.yml
 conda activate mf6models
 ```
@@ -111,9 +111,12 @@ Grid generation (Voronoi via FloPy's Triangle wrapper).
 
 ## 7. Point the scripts at your machine
 
-Do the **six find-and-replace** prefixes from §0 across `CdL/code/*.py`
-(VS Code: Ctrl+Shift+H, scope = the `code` folder). The per-variable executable list and the data
-variables are in [`02_PATHS_TO_CHANGE.md`](02_PATHS_TO_CHANGE.md).
+Edit the **three settings** at the top of [`CdL/code/config.py`](../code/config.py) — `BASE`,
+`MODFLOW_DIR`, `PYTHON_EXE` (or set the `CDL_BASE` / `CDL_MODFLOW_DIR` / `CDL_PYTHON_EXE` environment
+variables, which override the file). That is the **only** editing needed — every script imports its
+paths from `config.py`; there is no find-and-replace across the scripts. Also check the three
+executable sub-folder names in `config.py` match where your binaries sit. Full detail in
+[`02_PATHS_TO_CHANGE.md`](02_PATHS_TO_CHANGE.md).
 
 ## 8. Seed the working directories
 
@@ -129,9 +132,11 @@ Create `<DATA_ROOT>\CdL_model` and `<DATA_ROOT>\CdL_pest`, then copy the bundled
 | `input_data/pest/pest_optimised.npz` | `<DATA_ROOT>/CdL_pest/` *(over-fit — see [`04_CALIBRATION_STATE.md`](04_CALIBRATION_STATE.md))* |
 | `input_data/snirh/*.csv` | `<DATA_ROOT>/CdL_pest/snirh_data_availability/` |
 
-The `gis/` and `forcing/` bundled files can stay in `input_data/` — just point the model's
-`WATERSHED_GPKG`, `SOLOS_DIR`, `P_CSV`, `ET0_CSV` variables at them (prefix #3). Obtain the two large
-rasters (DEM, COS) and set `DEM_TIF` / `COS_TIF` — see [`../input_data/LARGE_DATA_MANIFEST.md`](../input_data/LARGE_DATA_MANIFEST.md).
+Copy the bundled `gis/` and `forcing/` files under `<DATA_ROOT>/CdL_model/` (i.e.
+`CdL_model/gis/` and `CdL_model/forcing/`) — that is where the scripts look for them, relative to
+`config.MODEL`. Obtain the two large rasters (DEM, COS) and place them per
+[`../input_data/LARGE_DATA_MANIFEST.md`](../input_data/LARGE_DATA_MANIFEST.md); no per-script path
+edits are needed once `config.py` and the folder layout are in place.
 
 ## 9. Smoke test
 

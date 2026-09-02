@@ -1,62 +1,57 @@
 # Paths to change on a new machine
 
-All hardcoded absolute paths in the scripts reduce to **six prefixes**. Do a
-find-and-replace for each across `CdL/code/*.py`. Nothing else needs editing.
+All machine-specific paths are centralised in **one file — [`CdL/code/config.py`](../code/config.py)**.
+Every script does `import config` and reads its paths from there, so moving to a new machine means
+editing **three settings** (or setting three environment variables). There is **no find-and-replace**
+to do across the scripts, and nothing else to edit.
 
-> Tip: most editors do folder-wide replace (VS Code: Ctrl+Shift+H). Replace the **prefix**
-> only, leaving the rest of each path intact.
+## The three settings
 
-### Automated alternative — `CdL/port_paths.py`
+Open [`../code/config.py`](../code/config.py) and edit the three roots at the top (or leave them and
+set the matching environment variables, which take precedence):
 
-Instead of editing by hand, run the helper script [`../port_paths.py`](../port_paths.py). It has the
-six prefixes below pre-loaded as its search strings. Workflow:
-
-1. Run it as-is (`DRY_RUN = True`, all NEW values empty) — it **scans** and reports where each old
-   prefix appears across `CdL/code`, so you can see exactly what will change.
-2. Fill in the `NEW` value for each prefix in the `REPLACEMENTS` list.
-3. Run again to **preview** the edits, then set `DRY_RUN = False` to **apply** them.
-
-It replaces both the backslash and forward-slash forms of each Windows path, only touches text files
-(skips binaries and `.git`), applies the most specific prefix first, and keeps a `.bak` of every
-modified file. Point `TARGET_DIR` at whichever folder you unpacked the code into.
-
-| # | Find (current prefix) | Replace with | What it is |
+| Setting | Env var | What it is | Example |
 |---|---|---|---|
-| 1 | `E:\00code_ws\DRYAD` | your `<DATA_ROOT>` (e.g. `D:\DRYAD`) | The two working dirs `CdL_model` (model workspace/outputs) and `CdL_pest` (PEST dirs) live under here. **Also written as forward slashes** in a few spots — check both `E:\00code_ws\DRYAD` and `E:/00code_ws/DRYAD`. |
-| 2 | `E:\00code\flopy\dryad_cdl` | your `<CODE_DIR>` = the `CdL/code` folder of this repo | Only in `build_pst.py` (`CODE = …`), used to copy `forward_run.py` into the PEST template. |
-| 3 | `E:\zzCloud\OneDrive - LNEG …\DRYAD` | your `<GIS_ROOT>` | Master GeoPackage, DEM, forcing CSVs and soils rasters. If you use the bundled `input_data`, point the individual variables at `input_data/…` instead (see below). Appears with both `\` and `/`. |
-| 4 | `E:\ArcGis_Data\WorkSpace\COS\COSc2025\COSc_2025_N3_v0_TM06.tif` | your COS raster path | The national land-cover raster (see `LARGE_DATA_MANIFEST.md`). |
-| 5 | `C:\00MODFLOW` | your MODFLOW/PEST++ install root | Executables: `mf6.exe`, `triangle.exe`, `pestpp-ies.exe`. |
-| 6 | `C:\miniconda3\envs\flopy` | your conda env prefix | The Python that PEST++ calls per forward run (`build_pst.py` `model_command`). Must be the env with FloPy installed. |
+| `BASE` | `CDL_BASE` | Project **data root** — the folder that holds the two working dirs `CdL_model` (model workspace/outputs, plus `gis/` and `forcing/` under it) and `CdL_pest` (PEST org/template/master/workers). | `D:\DRYAD\work` |
+| `MODFLOW_DIR` | `CDL_MODFLOW_DIR` | Folder holding the **MODFLOW 6 / Triangle / PEST++** executables. | `C:\sw\MODFLOW` |
+| `PYTHON_EXE` | `CDL_PYTHON_EXE` | The **conda-env `python.exe`** that PEST++ workers call to run `forward_run.py`. | `C:\sw\miniconda3\envs\mf6models\python.exe` |
 
-## Executables (prefix #5) — set each explicitly
+Everything else is **derived** from these (you normally don't touch it):
 
-| Variable | File | Set to |
-|---|---|---|
-| `MF6_EXE` | `cdl_gwf_model_fable_v2.py`; `MF6` in `pest_prep.py` | `…\mf6.exe` (MODFLOW 6 ≥ 6.7.0) |
-| `TRIANGLE_EXE` | `cdl_gwf_model_fable_v2.py` | `…\triangle.exe` |
-| `PESTPP_IES` | `run_ies.py` | `…\pestpp-ies.exe` |
-
-## Data variables (prefix #3) — where the bundled files map
-
-If you copy `input_data/` somewhere and want to point straight at it, set these in
-`cdl_gwf_model_fable_v2.py` (they are all near the top config block, ~lines 85–120 and ~240, ~300):
-
-| Variable | Bundled file |
+| Derived (in `config.py`) | Value |
 |---|---|
-| `WATERSHED_GPKG` | `input_data/gis/dryad_modelo_NbS.gpkg` |
-| `SOLOS_DIR` (→ `ks/ths/wp/fc_cdl.tif`) | `input_data/gis/` |
-| `P_CSV`, `ET0_CSV` | `input_data/forcing/` |
-| `VORONOI_LAYERS` | `input_data/grid_cache/voronoi_layers.npz` |
-| `DONOR_STREAMFLOW_CSV` | `input_data/snirh/streamflow_21F_01H.csv` |
-| `DEM_TIF` | **not bundled** — see `LARGE_DATA_MANIFEST.md` |
-| `COS_TIF` (prefix #4) | **not bundled** — see `LARGE_DATA_MANIFEST.md` |
+| `CODE` | this repo's `CdL/code` folder (self-locating — never edit) |
+| `MODEL` | `BASE / "CdL_model"` |
+| `PEST` | `BASE / "CdL_pest"` |
+| `MODIS_DIR` | `MODEL / "RS" / "MODIS4CDL"` |
+| `MF6_EXE` | `MODFLOW_DIR / "mf6.7.0_win64" / "bin" / "mf6.exe"` |
+| `TRIANGLE_EXE` | `MODFLOW_DIR / "win64" / "triangle.exe"` |
+| `PESTPP_IES` | `MODFLOW_DIR / "pestpp-5.2.27-win" / "bin" / "pestpp-ies.exe"` |
 
-Also point these calibration-side paths (they use `<DATA_ROOT>`, prefix #1, so #1 usually covers them):
-`correct_synthetic_piezo.py` (GRB + GPKG), `postprocess_cdl.py` (`SYN_PIEZO_CSV`, GPKG),
-`make_obs.py` (`SYN_PIEZO`, `last_sim_start.txt`), `extract_pest_optimised.py`.
+## Two things to check inside `config.py`
 
-## The one path pyEMU writes for you — do NOT hand-edit
+1. **Executable sub-folder names.** `MF6_EXE`, `TRIANGLE_EXE` and `PESTPP_IES` assume the exact
+   sub-folders shown above under `MODFLOW_DIR` (`mf6.7.0_win64\bin`, `win64`, `pestpp-5.2.27-win\bin`).
+   Either lay your `MODFLOW_DIR` out the same way, or edit those three lines to match where your
+   binaries actually sit.
+2. **Environment variables win.** If `CDL_BASE` / `CDL_MODFLOW_DIR` / `CDL_PYTHON_EXE` are set in your
+   shell, they override the hardcoded defaults — handy for switching machines without editing the file.
 
-`build_pst.py` sets `pst.model_command = r"…python.exe forward_run.py"` (prefix #6). That is the
-only place the per-forward-run Python is named. Set it to your env's `python.exe`.
+## Where the bundled `input_data/` maps
+
+The scripts expect the data under `BASE\CdL_model` and `BASE\CdL_pest`. Copy the bundled inputs there
+(the full seeding table is in [`01_SETUP.md`](01_SETUP.md) §8):
+
+| Bundled file | Goes to (relative to `config.MODEL` / `config.PEST`) |
+|---|---|
+| `input_data/gis/dryad_modelo_NbS.gpkg`, soils `*_cdl.tif` | `CdL_model/gis/` |
+| `input_data/forcing/p_month…csv`, `et0_month…csv` | `CdL_model/forcing/` |
+| `input_data/grid_cache/*` | `CdL_model/` (and `voronoi_layers.npz` → `CdL_model/conceptual/layers/`) |
+| `input_data/pest/*.npz` | `CdL_pest/` |
+| `input_data/snirh/*` | `CdL_pest/snirh_data_availability/` |
+| DEM (`dem_cdl.tif`), COS raster | **not bundled** — see [`../input_data/LARGE_DATA_MANIFEST.md`](../input_data/LARGE_DATA_MANIFEST.md) |
+
+Individual data-file paths are defined at the top of each script **relative to `config.MODEL` /
+`config.PEST`** — so once the three roots are right and the files are seeded, no per-script edits are
+needed. (Legacy note: the old manual six-prefix / `port_paths.py` workflow has been retired in favour
+of `config.py`.)

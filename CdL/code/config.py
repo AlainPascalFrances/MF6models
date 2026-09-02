@@ -3,7 +3,7 @@ config.py — single place for the machine-specific disk paths.
 
 Every CdL script imports its paths from here, so moving the project to a new machine
 means editing only the three roots below (or setting the matching environment variables) —
-no path edits scattered across the scripts, and nothing to run (replaces port_paths.py).
+no path edits scattered across the scripts, and no find-and-replace to run.
 
     BASE         project root that holds CdL_model/ and CdL_pest/ (and, usually, code/)
     MODFLOW_DIR  folder holding the MODFLOW 6 / PEST++ / Triangle executables

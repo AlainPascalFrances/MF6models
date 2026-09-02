@@ -17,5 +17,6 @@ separately, place them anywhere, and point the corresponding variable in
   cell tops and SFR routing — supply it. To avoid the 187 MB national COS raster you may instead
   clip it to the CdL watershed once and repoint `COS_TIF` at the small clip; the derived
   `pest/cos_zones.npz` (already bundled) is what the PEST *forward run* uses.
-- Placement suggestion (keeps prefix #3 consistent): drop them under your `<GIS_ROOT>` mirroring the
-  original layout, or put them in `input_data/gis/` and set `DEM_TIF` / `COS_TIF` to those paths.
+- Placement: drop them under `<DATA_ROOT>/CdL_model/gis/` (i.e. `config.MODEL / "gis"`) alongside the
+  other bundled GIS files, so the `DEM_TIF` / `COS_TIF` paths (defined relative to `config.MODEL`)
+  resolve with no per-script edits.

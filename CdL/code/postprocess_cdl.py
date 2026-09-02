@@ -36,8 +36,8 @@ import matplotlib.patheffects as patheffects
 
 import flopy
 
-# --- CONFIG (keep in sync with cdl_gwf_model_opusv1.py) ----------------------
-WORKSPACE = Path(str(config.MODEL))
+# --- CONFIG (paths come from config.py; keep in sync with cdl_gwf_model_fable_v2.py) ---
+WORKSPACE   = Path(str(config.MODEL))
 MODEL_NAME  = "cdl_gwf"
 # SIM_START MUST match the model run. The model writes its start date to
 # last_sim_start.txt; read it so postproc auto-syncs to whatever window the model
@@ -48,8 +48,8 @@ print(f">> SIM_START = {SIM_START.date()} ({'from last_sim_start.txt' if _ssf.ex
 SPINUP_NPER = 12          # SS period 0 + 11 transient spin-up months -> first 12 SPs
 GPKG        = WORKSPACE / "gis" / "dryad_modelo_NbS.gpkg"
 OBS_LAYER   = "obs_points_cdl"
-P_CSV  = WORKSPACE / "forcing" / "p_month_198101_202605.csv"
-ET0_CSV = WORKSPACE / "forcing" / "et0_month_198101_202605.csv"
+P_CSV       = WORKSPACE / "forcing" / "p_month_198101_202605.csv"
+ET_CSV      = WORKSPACE / "forcing" / "et0_month_198101_202605.csv"
 
 PIEZO_XLSX  = (str(config.PEST) + r"\snirh_data_availability\piezos_qualitative_month_198101_202605.xlsx")
 # SYNTHETIC piezometer heads (regionalised from SNIRH analogs) — the real observation
@@ -95,6 +95,33 @@ def load_grid():
         from flopy.discretization import VertexGrid
         mg = VertexGrid(**gridprops_vg, nlay=1)
         return mg, None, None
+
+
+# --- catchment area + volumetric->depth conversion (water-balance graphs in mm/yr, not m³) ---
+_CATCH_AREA_M2 = None
+def catchment_area_m2():
+    """Total model (catchment) area in m², cached — the denominator for the mm/yr conversion."""
+    global _CATCH_AREA_M2
+    if _CATCH_AREA_M2 is None:
+        try:
+            mg, _, _ = load_grid()
+            n = int(getattr(mg, "ncpl", None) or mg.nnodes)
+            a = 0.0
+            for i in range(n):
+                v = np.asarray(mg.get_cell_vertices(i)); x, y = v[:, 0], v[:, 1]
+                a += 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+            _CATCH_AREA_M2 = float(a)
+            print(f"   catchment area = {_CATCH_AREA_M2 / 1e6:.2f} km² (used for the mm/yr water-balance graphs)")
+        except Exception as e:
+            _CATCH_AREA_M2 = 1.992e7
+            print(f"   (area calc failed: {e!r}; using {_CATCH_AREA_M2 / 1e6:.2f} km²)")
+    return _CATCH_AREA_M2
+
+def mmyr_per_m3d():   # multiply an m³/d flux by this -> mm/yr depth over the catchment
+    return 1000.0 * 365.25 / catchment_area_m2()
+
+def mmyr_per_m3yr():  # multiply an m³/yr volume by this -> mm/yr depth over the catchment
+    return 1000.0 / catchment_area_m2()
 
 
 def real_kstpkper(binfile):
@@ -614,18 +641,20 @@ def list_budget():
         "compartment": [compartment_of(b) for b in bases],
         "mean_rate_m3d": [net[b].mean() for b in bases],
     }).sort_values(["compartment", "term"])
+    summ["mean_rate_mm_yr"] = summ["mean_rate_m3d"] * mmyr_per_m3d()   # m³/d -> mm/yr over the catchment
     summ.to_csv(OUT / "budget_compartment_mean.csv", index=False)
 
     fig, ax = plt.subplots(figsize=(9.8, 5.8))
     labels = [term_label(b) for b in summ["term"]]
     colors = [term_color(b) for b in summ["term"]]
-    bars = ax.barh(labels, summ["mean_rate_m3d"], color=colors, edgecolor="k", lw=0.4)
+    _vals = summ["mean_rate_mm_yr"].to_numpy()
+    bars = ax.barh(labels, _vals, color=colors, edgecolor="k", lw=0.4)
     ax.axvline(0, color="k", lw=0.8)
-    for bar, v in zip(bars, summ["mean_rate_m3d"]):     # value labels (small terms readable)
-        ax.annotate(f"{v:,.0f}", (v, bar.get_y() + bar.get_height() / 2),
+    for bar, v in zip(bars, _vals):                     # value labels (small terms readable)
+        ax.annotate(f"{v:,.1f}", (v, bar.get_y() + bar.get_height() / 2),
                     xytext=(4 if v >= 0 else -4, 0), textcoords="offset points",
                     va="center", ha="left" if v >= 0 else "right", fontsize=7)
-    ax.set_xlabel("mean rate (m³/d)   + = source into aquifer,  − = sink")
+    ax.set_xlabel("mean rate (mm/yr)   + = source into aquifer,  − = sink")
     ax.set_title("CdL — mean water budget by term (post spin-up)\n"
                  "DRN family in blue tones (seep / seep→SFR baseflow / west underflow / secondary outlet)")
     ax.margins(x=0.18)
@@ -636,15 +665,16 @@ def list_budget():
     # ---- yearly volumes (m3/yr) ----
     days = net.index.days_in_month.to_numpy(dtype=float)
     vol = net.multiply(days, axis=0)                   # m3 per period
-    yearly = vol.groupby(vol.index.year).sum()         # year-agnostic across pandas versions
+    yearly = vol.groupby(vol.index.year).sum()         # m³/yr (year-agnostic across pandas versions)
     yearly.to_csv(OUT / "budget_yearly_volume_m3.csv")
+    yearly_mm = yearly * mmyr_per_m3yr()               # m³/yr -> mm/yr over the catchment
 
     if len(yearly) >= 1:
         fig, ax = plt.subplots(figsize=(10, 5))
         bottom_pos = np.zeros(len(yearly)); bottom_neg = np.zeros(len(yearly))
         x = np.arange(len(yearly))
         for b in bases:
-            vals = yearly[b].to_numpy()
+            vals = yearly_mm[b].to_numpy()
             base = np.where(vals >= 0, bottom_pos, bottom_neg)
             ax.bar(x, vals, bottom=base, label=term_label(b),
                    color=term_color(b), edgecolor="k", lw=0.3)
@@ -652,7 +682,7 @@ def list_budget():
             bottom_neg += np.where(vals < 0, vals, 0)
         ax.axhline(0, color="k", lw=0.8)
         ax.set_xticks(x); ax.set_xticklabels(yearly.index, rotation=90, va="top")
-        ax.set_ylabel("volume (m³/yr)   + = source into aquifer")
+        ax.set_ylabel("depth (mm/yr)   + = source into aquifer")
         ax.set_title("CdL — yearly water budget by term  (DRN family in blue tones)")
         ax.legend(fontsize=6.5, ncol=2, loc="best")
         fig.tight_layout()
@@ -709,12 +739,13 @@ def package_budget(bud_path, title, fname):
         means["MVR-NET (recv+sent)"] = recv + sent
     s = pd.Series(means).sort_values()
     s.to_frame("mean_rate_m3d").to_csv(OUT / f"{fname}.csv")
+    _sv = s.values * mmyr_per_m3d()                      # m³/d -> mm/yr over the catchment
     fig, ax = plt.subplots(figsize=(8, 0.5 * len(s) + 1.5))
-    ax.barh(s.index, s.values,
-            color=["tab:red" if v < 0 else "tab:blue" for v in s.values],
+    ax.barh(s.index, _sv,
+            color=["tab:red" if v < 0 else "tab:blue" for v in _sv],
             edgecolor="k", lw=0.4)
     ax.axvline(0, color="k", lw=0.8)
-    ax.set_xlabel("mean rate (m³/d)   (MF6 sign: + into the package element)")
+    ax.set_xlabel("mean rate (mm/yr)   (MF6 sign: + into the package element)")
     ax.set_title(f"CdL — {title} budget (post spin-up)")
     fig.tight_layout()
     fig.savefig(OUT / f"{fname}.png", dpi=150, bbox_inches="tight")
@@ -781,15 +812,16 @@ def sfr_budget():
     s = pd.Series(means).sort_values()
     (s.rename(index=lambda t: SFR_LABELS.get(t, t))
        .to_frame("mean_rate_m3d").to_csv(OUT / "sfr_budget_mean.csv"))
+    _sv = s.values * mmyr_per_m3d()                      # m³/d -> mm/yr over the catchment
     fig, ax = plt.subplots(figsize=(8.5, 0.5 * len(s) + 1.6))
-    ax.barh([SFR_LABELS.get(t, t) for t in s.index], s.values,
-            color=["tab:red" if v < 0 else "tab:blue" for v in s.values], edgecolor="k", lw=0.4)
-    ax.set_xscale("symlog", linthresh=10)
+    ax.barh([SFR_LABELS.get(t, t) for t in s.index], _sv,
+            color=["tab:red" if v < 0 else "tab:blue" for v in _sv], edgecolor="k", lw=0.4)
+    ax.set_xscale("symlog", linthresh=1)
     ax.axvline(0, color="k", lw=0.8)
-    for i, v in enumerate(s.values):
-        ax.annotate(f"{v:,.0f}", (v, i), xytext=(4, 0), textcoords="offset points",
+    for i, v in enumerate(_sv):
+        ax.annotate(f"{v:,.1f}", (v, i), xytext=(4, 0), textcoords="offset points",
                     va="center", ha="left", fontsize=7)
-    ax.set_xlabel("mean rate (m³/d, symlog)   blue = into stream, red = out of stream")
+    ax.set_xlabel("mean rate (mm/yr, symlog)   blue = into stream, red = out of stream")
     ax.set_title("CdL — SFR surface-water budget (post spin-up)")
     fig.tight_layout(); fig.savefig(OUT / "sfr_budget_mean.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -823,17 +855,17 @@ def sfr_budget():
     pd.DataFrame(rows, columns=["term", "mean_rate_m3d"]).to_csv(
         OUT / "sfr_inlet_outlet.csv", index=False)
     labels = [r[0] for r in rows][::-1]
-    vals = [r[1] for r in rows][::-1]
+    vals = [r[1] * mmyr_per_m3d() for r in rows][::-1]   # m³/d -> mm/yr over the catchment
     cols = ["0.6" if "net" in l else ("tab:blue" if v >= 0 else "tab:red")
             for l, v in zip(labels, vals)]
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.barh(labels, vals, color=cols, edgecolor="k", lw=0.4)
-    ax.set_xscale("symlog", linthresh=10)
+    ax.set_xscale("symlog", linthresh=1)
     ax.axvline(0, color="k", lw=0.8)
     for i, v in enumerate(vals):
-        ax.annotate(f"{v:,.0f}", (v, i), xytext=(4, 0), textcoords="offset points",
+        ax.annotate(f"{v:,.1f}", (v, i), xytext=(4, 0), textcoords="offset points",
                     va="center", ha="left", fontsize=8)
-    ax.set_xlabel("mean rate (m³/d, symlog)   blue = into stream, red = out")
+    ax.set_xlabel("mean rate (mm/yr, symlog)   blue = into stream, red = out")
     ax.set_title("CdL — SFR inlet / outlets split (post spin-up)")
     fig.tight_layout(); fig.savefig(OUT / "sfr_inlet_outlet.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -874,9 +906,9 @@ def layer_storage():
     pd.DataFrame({"layer": np.arange(1, nlay + 1), "mean_storage_rate_m3d": mean_lay}) \
         .to_csv(OUT / "layer_storage_mean.csv", index=False)
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.bar(np.arange(1, nlay + 1), mean_lay, color="tab:brown", edgecolor="k")
+    ax.bar(np.arange(1, nlay + 1), mean_lay * mmyr_per_m3d(), color="tab:brown", edgecolor="k")
     ax.axhline(0, color="k", lw=0.8)
-    ax.set_xlabel("layer"); ax.set_ylabel("mean storage rate (m³/d)")
+    ax.set_xlabel("layer"); ax.set_ylabel("mean storage rate (mm/yr)")
     ax.set_title("CdL — per-layer net storage change (+ = released to flow)")
     ax.set_xticks(np.arange(1, nlay + 1))
     fig.tight_layout()
@@ -1048,11 +1080,12 @@ def lake_outputs():
             if summary:
                 s = pd.Series(summary).sort_values()
                 s.to_frame("mean_rate_m3d").to_csv(OUT / "lake_budget_mean.csv")
+                _sv = s.values * mmyr_per_m3d()          # m³/d -> mm/yr over the catchment
                 fig, ax = plt.subplots(figsize=(8, 0.5 * len(s) + 1.5))
-                ax.barh(s.index, s.values,
-                        color=["tab:red" if v < 0 else "tab:blue" for v in s.values], edgecolor="k")
+                ax.barh(s.index, _sv,
+                        color=["tab:red" if v < 0 else "tab:blue" for v in _sv], edgecolor="k")
                 ax.axvline(0, color="k", lw=0.8)
-                ax.set_xlabel("mean rate (m³/d)   (MF6 sign: + into the lake)")
+                ax.set_xlabel("mean rate (mm/yr)   (MF6 sign: + into the lake)")
                 ax.set_title("CdL — pond (LAK) budget  ('GWF' = bed seepage = SW–GW flux)")
                 fig.tight_layout(); fig.savefig(OUT / "lake_budget_mean.png", dpi=150, bbox_inches="tight")
                 plt.close(fig)
@@ -1183,17 +1216,18 @@ def mvr_accounting():
         pkgs = sorted(set(given.index) | set(recv.index))
         import numpy as _np
         y = _np.arange(len(pkgs))
+        _k = mmyr_per_m3d()                              # m³/d -> mm/yr over the catchment
         fig, ax = plt.subplots(figsize=(8, 0.6 * len(pkgs) + 2))
-        ax.barh(y - 0.2, [recv.get(p, 0.0) for p in pkgs], height=0.38,
+        ax.barh(y - 0.2, [recv.get(p, 0.0) * _k for p in pkgs], height=0.38,
                 color="tab:blue", label="received (from mover, +)")
-        ax.barh(y + 0.2, [given.get(p, 0.0) for p in pkgs], height=0.38,
+        ax.barh(y + 0.2, [given.get(p, 0.0) * _k for p in pkgs], height=0.38,
                 color="tab:red", label="given (to mover, -)")
         for i, p in enumerate(pkgs):
-            net = recv.get(p, 0.0) + given.get(p, 0.0)
-            ax.text(0, i + 0.42, f"net {net:+.0f}", fontsize=7, color="k")
+            net = (recv.get(p, 0.0) + given.get(p, 0.0)) * _k
+            ax.text(0, i + 0.42, f"net {net:+.1f}", fontsize=7, color="k")
         ax.set_yticks(y); ax.set_yticklabels(pkgs)
         ax.axvline(0, color="k", lw=0.8)
-        ax.set_xlabel("mean rate (m³/d)   (MF6 sign: + into the package)")
+        ax.set_xlabel("mean rate (mm/yr)   (MF6 sign: + into the package)")
         ax.set_title("CdL — MVR/CRR mover accounting per package\n"
                      "(gross FROM-MVR/TO-MVR double-count the cascade; net = actual exchange)")
         ax.legend(fontsize=8, loc="lower right")
@@ -1260,18 +1294,19 @@ def lake_water_balance():
     s.to_frame("mean_rate_m3d").to_csv(OUT / "lake_water_balance.csv")
     flux = s.drop(index=[i for i in ["Storage change"] if i in s.index])
     resid = float(s.sum())    # all terms incl storage should ~ 0 (mass balance)
+    _k = mmyr_per_m3d()                                  # m³/d -> mm/yr over the catchment
     order = flux.reindex(flux.abs().sort_values().index).index
     colors = ["tab:blue" if flux[i] >= 0 else "tab:red" for i in order]
     fig, ax = plt.subplots(figsize=(8.5, 0.55 * len(order) + 1.8))
-    ax.barh(range(len(order)), [flux[i] for i in order], color=colors, edgecolor="k", lw=0.4)
+    ax.barh(range(len(order)), [flux[i] * _k for i in order], color=colors, edgecolor="k", lw=0.4)
     ax.set_yticks(range(len(order))); ax.set_yticklabels(order, fontsize=9)
     for j, i in enumerate(order):
-        ax.text(flux[i], j, f" {flux[i]:+,.0f}", va="center",
+        ax.text(flux[i] * _k, j, f" {flux[i] * _k:+,.1f}", va="center",
                 ha="left" if flux[i] >= 0 else "right", fontsize=8)
     ax.axvline(0, color="k", lw=0.8)
-    ax.set_xlabel("mean rate (m³/d)   (+ into ponds / − out of ponds)")
+    ax.set_xlabel("mean rate (mm/yr)   (+ into ponds / − out of ponds)")
     ax.set_title("CdL — pond (LAK) detailed water balance, all 19 ponds\n"
-                 f"blue = sources, red = sinks · Σ(all incl. storage) = {resid:+.1f} m³/d (≈0 = closed)")
+                 f"blue = sources, red = sinks · Σ(all incl. storage) = {resid * _k:+.2f} mm/yr (≈0 = closed)")
     fig.tight_layout(); fig.savefig(OUT / "lake_water_balance.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   wrote lake_water_balance.png / .csv  (Σ residual {resid:+.1f} m³/d)")
@@ -1329,9 +1364,9 @@ def mvr_flux_by_route():
     s = pd.Series(means).sort_values()
     s.to_frame("mean_rate_m3d").to_csv(OUT / "mvr_flux_by_route.csv")
     fig, ax = plt.subplots(figsize=(8, 0.5 * len(s) + 1.5))
-    ax.barh(s.index, s.values, color="tab:purple", edgecolor="k", lw=0.4)
+    ax.barh(s.index, s.values * mmyr_per_m3d(), color="tab:purple", edgecolor="k", lw=0.4)
     ax.axvline(0, color="k", lw=0.8)
-    ax.set_xlabel("mean MVR flux (m³/d)")
+    ax.set_xlabel("mean MVR flux (mm/yr)")
     ax.set_title("CdL — route-level MVR/CRR flux (per receiver package)")
     fig.tight_layout(); fig.savefig(OUT / "mvr_flux_by_route.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -1367,28 +1402,29 @@ def sfr_outlet_obs_vs_sim():
     if obs is None:
         print(f"   (no {SFR_INLET_SERIES.name} — plotting the MODFLOW outlet only)")
 
+    _k = mmyr_per_m3d()                                                # m³/d -> mm/yr over the catchment
     fig, ax = plt.subplots(figsize=(13, 5))
-    ax.plot(sim_s.index, sim_s.values, color="tab:red", lw=1.2, zorder=6,
+    ax.plot(sim_s.index, sim_s.values * _k, color="tab:red", lw=1.2, zorder=6,
             label="MODFLOW outlet (SFR ext-outflow)")
     stat = ""
     if obs is not None:
         _real = obs["is_real"].astype(bool)
         gap, real = obs[~_real], obs[_real]
-        ax.plot(gap.index, gap["Q_outlet_m3d"], color="0.6", lw=0.6, ls=":", zorder=3,
+        ax.plot(gap.index, gap["Q_outlet_m3d"] * _k, color="0.6", lw=0.6, ls=":", zorder=3,
                 label="synthetic outlet — climatology gap (not observed)")
-        ax.plot(real.index, real["Q_outlet_m3d"], color="navy", lw=0.7, alpha=0.45, zorder=4)
-        ax.scatter(real.index, real["Q_outlet_m3d"], s=15, color="navy", zorder=7,
+        ax.plot(real.index, real["Q_outlet_m3d"] * _k, color="navy", lw=0.7, alpha=0.45, zorder=4)
+        ax.scatter(real.index, real["Q_outlet_m3d"] * _k, s=15, color="navy", zorder=7,
                    label="synthetic OBSERVED outlet (real donor months)")
         j = real[["Q_outlet_m3d"]].join(sim_s.rename("sim"), how="inner").dropna()
         if len(j):
-            o, s = j["Q_outlet_m3d"].to_numpy(), j["sim"].to_numpy()
+            o, s = j["Q_outlet_m3d"].to_numpy() * _k, j["sim"].to_numpy() * _k
             rmse, bias = float(np.sqrt(np.mean((s - o) ** 2))), float(np.mean(s - o))
             r = float(np.corrcoef(o, s)[0, 1]) if len(j) > 2 else float("nan")
-            stat = f"  |  {len(j)} obs months: RMSE {rmse:,.0f}, bias {bias:+,.0f} m³/d, r={r:.2f}"
+            stat = f"  |  {len(j)} obs months: RMSE {rmse:,.1f}, bias {bias:+,.1f} mm/yr, r={r:.2f}"
             j.rename(columns={"Q_outlet_m3d": "obs_synthetic_m3d", "sim": "modflow_m3d"}).to_csv(
                 OUT / "outlet_obs_vs_sim.csv")
-    ax.set_yscale("symlog", linthresh=1000)
-    ax.set_ylabel("outlet discharge (m³/d, symlog)")
+    ax.set_yscale("symlog", linthresh=10)
+    ax.set_ylabel("outlet discharge (mm/yr, symlog)")
     ax.set_xlim(sim_s.index.min(), sim_s.index.max())
     ax.set_title("CdL outlet — synthetic observed vs MODFLOW-computed" + stat)
     ax.legend(fontsize=8, loc="upper right"); ax.grid(alpha=0.3, which="both")
@@ -1454,8 +1490,8 @@ def run_timing():
     for _, r0 in tim.sort_values("inner", ascending=False).head(3).iterrows():
         ax.annotate(f"SP{int(r0.sp)}", (r0["date"], r0[ycol]), fontsize=7, ha="center", va="bottom")
     if ax2 is not None:
-        ax2.plot(tim["date"], inflow, color="tab:blue", lw=0.7)
-        ax2.set_ylabel("inlet inflow (m³/d)"); ax2.set_yscale("symlog", linthresh=1000)
+        ax2.plot(tim["date"], np.array(inflow, dtype=float) * mmyr_per_m3d(), color="tab:blue", lw=0.7)
+        ax2.set_ylabel("inlet inflow (mm/yr)"); ax2.set_yscale("symlog", linthresh=10)
         ax2.grid(alpha=0.3)
     (ax2 or ax).set_xlabel("date")
     fig.tight_layout(); fig.savefig(OUT / "sp_run_timing.png", dpi=150, bbox_inches="tight")

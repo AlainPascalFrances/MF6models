@@ -2636,7 +2636,7 @@ try:
     plt.close(fig)
 
     # CLIMATIC FORCING TIME SERIES: rainfall (blue bars hanging DOWN from the top) +
-    # potential ET (orange line, along the bottom); shared time x-axis. Monthly totals
+    # reference ET, ET0 (orange line, along the bottom); shared time x-axis. Monthly totals
     # in mm, post spin-up (2010-2026). rain_rate/et0_rate are m/d per stress period.
     _nsp = len(spinup)                                          # skip the 12-month spin-up replay
     _dts = all_months[_nsp:nper]
@@ -2644,8 +2644,8 @@ try:
     _rain = np.asarray(rain_rate[_nsp:nper], float) * 1000.0 * _pl     # m/d -> mm/month
     _pet  = np.asarray(et0_rate[_nsp:nper], float) * 1000.0 * _pl
     figf, axp = plt.subplots(figsize=(13, 4.5))
-    _lp, = axp.plot(_dts, _pet, color="darkorange", lw=1.6, label="Potential ET")   # bottom x-axis
-    axp.set_ylabel("Potential ET (mm/month)", color="darkorange")
+    _lp, = axp.plot(_dts, _pet, color="darkorange", lw=1.6, label="Reference evapotranspiration ET$_0$")   # bottom x-axis
+    axp.set_ylabel("Reference ET, ET$_0$ (mm/month)", color="darkorange")
     axp.tick_params(axis="y", labelcolor="darkorange")
     axp.set_ylim(0, max(_pet.max(), 1.0) * 2.2)                # PET occupies the LOWER band
     axp.set_xlabel("date"); axp.margins(x=0.01)
@@ -2654,9 +2654,15 @@ try:
     axr.set_ylabel("Rainfall (mm/month)", color="tab:blue")
     axr.tick_params(axis="y", labelcolor="tab:blue")
     axr.set_ylim(max(_rain.max(), 1.0) * 2.2, 0)              # inverted: 0 at top, bars grow DOWNWARD, upper band
-    axp.set_title(f"CdL — climatic forcing: rainfall (blue, top) & potential ET (orange, bottom)  "
+    axp.set_title(f"CdL — climatic forcing: rainfall (blue, top) & reference ET, ET$_0$ (orange, bottom)  "
                   f"[{_dts[0]:%Y-%m} .. {_dts[-1]:%Y-%m}]")
-    axp.legend([_lb, _lp], ["Rainfall (mm/month)", "Potential ET (mm/month)"], loc="center left", fontsize=9)
+    axp.legend([_lb, _lp], ["Rainfall (mm/month)", "Reference evapotranspiration ET$_0$ (mm/month)"],
+               loc="center left", fontsize=9)
+    # x-axis: yyyy-mm labels, vertical, one tick at the start of each October (hydrological-year start)
+    import matplotlib.dates as mdates
+    axp.xaxis.set_major_locator(mdates.YearLocator(base=1, month=10, day=1))
+    axp.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+    axp.tick_params(axis="x", labelrotation=90)
     figf.tight_layout()
     figf.savefig(PREPROC_DIR / "forcing_timeseries.png", dpi=150, bbox_inches="tight")
     plt.close(figf)
